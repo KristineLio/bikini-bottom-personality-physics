@@ -2011,3 +2011,27 @@ h1 span{color:var(--yellow)}
   .light-ray,.ambient-bubble,.prop-object.is-active-target,
   .actor.is-payoff-escape .toon{animation:none!important}
 }
+
+
+/* RC depth stacking + subtle pointer parallax */
+.stage{
+  --parallax-x:0px;
+  --parallax-y:0px;
+}
+.stage-objects{z-index:auto!important}
+.stage-backdrop{
+  transform:translate(calc(var(--parallax-x) * .35),calc(var(--parallax-y) * .22));
+  transition:transform .28s ease-out;
+}
+.stage-atmosphere{
+  transform:translate(calc(var(--parallax-x) * -.22),calc(var(--parallax-y) * -.15));
+  transition:transform .38s ease-out;
+}
+.stage-foreground{
+  transform:translate(calc(var(--parallax-x) * .62),calc(var(--parallax-y) * .35));
+  transition:transform .22s ease-out;
+}
+.prop-object.is-active-target{z-index:15!important}
+@media(prefers-reduced-motion:reduce){
+  .stage-backdrop,.stage-atmosphere,.stage-foreground{transform:none!important;transition:none!important}
+}
