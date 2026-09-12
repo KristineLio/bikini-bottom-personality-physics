@@ -1522,6 +1522,7 @@
     els.changeBadge.classList.remove("is-on");
     hideNarrator();
     hideBanner();
+    hideChainBadge();
     hidePhysics();
     showScreen("home");
     state.mode = "home";
@@ -1536,6 +1537,7 @@
     $("#btnHome").addEventListener("click", goHome);
     $("#btnVoice").addEventListener("click", toggleVoice);
     $("#btnAction").addEventListener("click", runDirectorSimulation);
+    $("#btnLoadChainReaction").addEventListener("click", loadChainReactionSetup);
     $("#btnReset").addEventListener("click", () => openDirector(state.mode === "chaos"));
     $("#btnCloseResult").addEventListener("click", hideResult);
     $("#btnAskConch").addEventListener("click", askConch);
