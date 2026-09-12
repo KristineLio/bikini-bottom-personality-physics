@@ -2035,3 +2035,307 @@ h1 span{color:var(--yellow)}
 @media(prefers-reduced-motion:reduce){
   .stage-backdrop,.stage-atmosphere,.stage-foreground{transform:none!important;transition:none!important}
 }
+
+
+/* ============================================================
+   V2.2 RC — CINEMATIC 20-SECOND JUDGE EXPERIENCE
+   SETUP → ROUND 1 → +1 VARIABLE → ROUND 2 → PROOF
+   ============================================================ */
+
+/* Five-beat film progress */
+.judge-film-progress{
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,253,235,.98),rgba(246,249,252,.96))!important;
+  box-shadow:0 8px 22px rgba(2,32,64,.12);
+}
+.judge-film-stepper{
+  display:grid;
+  grid-template-columns:auto 14px auto 14px auto 14px auto 14px auto;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  margin-bottom:7px;
+  font-family:Bungee,Impact,"Arial Black",sans-serif;
+}
+.judge-film-stepper>span{
+  position:relative;
+  padding:4px 7px;
+  border-radius:999px;
+  color:#728393;
+  background:rgba(148,163,184,.12);
+  font-size:6.5px;
+  letter-spacing:.035em;
+  transition:background .2s ease,color .2s ease,transform .2s ease,box-shadow .2s ease;
+}
+.judge-film-stepper>span.is-active{
+  color:#17324d;
+  background:#ffe96b;
+  box-shadow:0 0 0 2px rgba(255,213,54,.22);
+  transform:translateY(-1px);
+}
+.judge-film-stepper>span.is-done{
+  color:#0b6b45;
+  background:#d9f8e7;
+}
+.judge-film-stepper>i{
+  font-style:normal;
+  font-size:9px;
+  color:#94a3b8;
+}
+.judge-film-progress .judge-progress-head{
+  padding-top:6px;
+  border-top:1px solid rgba(22,50,79,.11);
+}
+.judge-film-progress .judge-progress-track{
+  height:6px;
+  background:#dbe5eb;
+}
+.judge-film-progress .judge-progress-track i{
+  background:linear-gradient(90deg,#52c7ee,#ffe15d,#ff9c63);
+  transition:width .24s cubic-bezier(.2,.8,.2,1);
+}
+
+/* Variable freeze: the stage becomes a visual experiment frame. */
+.stage.is-variable-freeze .actor,
+.stage.is-variable-freeze .prop-object:not(.is-new-variable){
+  filter:grayscale(.22) brightness(.64) saturate(.64)!important;
+  opacity:.46!important;
+  transition:filter .24s ease,opacity .24s ease!important;
+}
+.stage.is-variable-freeze .stage-backdrop,
+.stage.is-variable-freeze .stage-atmosphere,
+.stage.is-variable-freeze .stage-foreground{
+  filter:brightness(.73) saturate(.7);
+  transition:filter .24s ease,transform .28s ease-out;
+}
+.prop-object.is-new-variable{
+  z-index:31!important;
+  opacity:1!important;
+  filter:
+    brightness(1.15)
+    saturate(1.2)
+    drop-shadow(0 0 10px rgba(255,236,93,.9))
+    drop-shadow(0 0 26px rgba(255,213,54,.62))!important;
+  animation:newVariableHero 1s ease-in-out infinite alternate;
+}
+.prop-object.is-new-variable small{
+  background:#fff6a7;
+  box-shadow:0 0 0 3px rgba(255,234,87,.2);
+}
+@keyframes newVariableHero{
+  from{transform:translate(-50%,-50%) scale(1)}
+  to{transform:translate(-50%,-50%) scale(1.11) rotate(-2deg)}
+}
+
+/* More cinematic change-one-thing moment. */
+.stage.is-variable-freeze .judge-overlay{
+  background:linear-gradient(180deg,rgba(2,25,46,.55),rgba(2,25,46,.7));
+}
+.stage.is-variable-freeze .change-badge{
+  z-index:35;
+  min-width:210px;
+  background:linear-gradient(180deg,#fff9ba,#ffe56a);
+  box-shadow:0 10px 0 rgba(6,59,104,.22),0 24px 55px rgba(0,0,0,.28);
+}
+
+/* Final 17–20 second frame */
+.film-finale{
+  position:absolute;
+  inset:0;
+  z-index:36;
+  display:grid;
+  place-content:center;
+  justify-items:center;
+  gap:3px;
+  padding:28px;
+  text-align:center;
+  pointer-events:none;
+  opacity:0;
+  transform:scale(.98);
+  background:
+    radial-gradient(circle at 50% 46%,rgba(255,246,166,.18),transparent 34%),
+    linear-gradient(180deg,rgba(2,28,50,.56),rgba(2,28,50,.78));
+  color:#fff;
+  transition:opacity .24s ease,transform .24s ease;
+}
+.film-finale.is-on{
+  opacity:1;
+  transform:scale(1);
+}
+.film-finale small{
+  margin-bottom:9px;
+  padding:5px 8px;
+  border:1px solid rgba(255,255,255,.24);
+  border-radius:999px;
+  background:rgba(3,39,67,.44);
+  font:7px Bungee,Impact,sans-serif;
+  letter-spacing:.14em;
+  color:#bfeeff;
+}
+.film-finale strong,
+.film-finale span,
+.film-finale em{
+  display:block;
+  font-family:Bungee,Impact,"Arial Black",sans-serif;
+  font-style:normal;
+  line-height:1.02;
+  text-shadow:0 5px 18px rgba(0,0,0,.32);
+}
+.film-finale strong{font-size:clamp(22px,3.4vw,42px)}
+.film-finale span{font-size:clamp(18px,2.7vw,34px);color:#fff2a6}
+.film-finale em{font-size:clamp(23px,3.7vw,46px);color:#ff9a67}
+.film-finale-outcomes{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin-top:14px;
+}
+.film-finale-outcomes b{
+  padding:7px 9px;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:10px;
+  background:rgba(255,255,255,.1);
+  backdrop-filter:blur(8px);
+  font-size:8px;
+}
+.film-finale-outcomes i{
+  font-style:normal;
+  color:#ffe96b;
+  font-weight:900;
+}
+.film-finale.is-on strong{animation:finaleLineIn .4s ease both}
+.film-finale.is-on span{animation:finaleLineIn .4s .12s ease both}
+.film-finale.is-on em{animation:finaleLineIn .4s .24s ease both}
+.film-finale.is-on .film-finale-outcomes{animation:finaleLineIn .4s .38s ease both}
+@keyframes finaleLineIn{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* Proof-first post-film landing screen */
+.post-film-overlay{
+  background:
+    radial-gradient(circle at 50% 0%,rgba(70,196,235,.22),transparent 36%),
+    rgba(2,24,43,.88);
+}
+.post-film-card{
+  width:min(900px,100%)!important;
+  max-height:min(92vh,920px);
+  overflow:auto;
+  background:linear-gradient(180deg,#fbfeff,#fff9dc 46%,#fff7d9)!important;
+}
+.post-film-hero{
+  display:grid;
+  justify-items:center;
+  text-align:center;
+  padding:4px 8px 12px;
+}
+.post-film-hero h2{
+  margin:6px 0 7px!important;
+  font-size:clamp(24px,3.8vw,42px)!important;
+  line-height:1.02!important;
+}
+.post-film-hero h2 span{color:#0873b5}
+.post-film-hero h2 em{color:#e55b22!important}
+.post-film-hero p{
+  margin:0;
+  max-width:590px;
+  font-size:10px;
+  line-height:1.4;
+  font-weight:900;
+  color:#486172;
+}
+.determinism-proof-primary{
+  margin-top:4px!important;
+  border-color:#0c5e8f!important;
+  background:
+    radial-gradient(circle at 100% 0%,rgba(255,232,94,.22),transparent 32%),
+    linear-gradient(180deg,#f2fbff,#fff)!important;
+  box-shadow:0 9px 0 rgba(8,89,137,.10),0 18px 38px rgba(2,32,64,.12);
+}
+.determinism-proof-primary .determinism-actions .btn{
+  min-height:52px;
+  font-size:11px;
+}
+.post-film-details{
+  margin-top:13px;
+  border:2px solid rgba(22,50,79,.18);
+  border-radius:15px;
+  background:rgba(255,255,255,.72);
+  overflow:hidden;
+}
+.post-film-details>summary{
+  cursor:pointer;
+  list-style:none;
+  padding:11px 13px;
+  text-align:center;
+  font:9px Bungee,Impact,"Arial Black",sans-serif;
+  color:#0873b5;
+  user-select:none;
+}
+.post-film-details>summary::-webkit-details-marker{display:none}
+.post-film-details>summary:after{
+  content:" +";
+  color:#e55b22;
+}
+.post-film-details[open]>summary:after{content:" −"}
+.post-film-details[open]>summary{
+  border-bottom:2px solid rgba(22,50,79,.1);
+}
+.post-film-details>.change-callout,
+.post-film-details>.comparison-grid,
+.post-film-details>.compare-explainer,
+.post-film-details>.physics-proof{
+  margin-left:12px;
+  margin-right:12px;
+}
+.post-film-details>.change-callout{margin-top:12px}
+.post-film-details>.physics-proof{margin-bottom:12px}
+
+/* Judge mode should read like a film, not a control panel. */
+.screen-play:has(.judge-film-progress:not([hidden])) .topbar{
+  background:linear-gradient(180deg,rgba(3,47,78,.96),rgba(4,58,92,.92));
+}
+.screen-play:has(.judge-film-progress:not([hidden])) .chaos-wrap{
+  opacity:.6;
+}
+
+/* During the 20-second film, X-ray flashes are deliberately brief. */
+.stage[data-visual-phase="rule"] .physics-layer{
+  box-shadow:
+    0 10px 28px rgba(2,25,48,.22),
+    inset 0 1px 0 rgba(255,255,255,.12)!important;
+}
+
+/* Responsive */
+@media(max-width:720px){
+  .judge-film-stepper{
+    grid-template-columns:auto 8px auto 8px auto 8px auto 8px auto;
+    gap:2px;
+  }
+  .judge-film-stepper>span{padding:3px 4px;font-size:5.5px}
+  .judge-film-stepper>i{font-size:7px}
+  .film-finale{padding:20px 12px}
+  .film-finale-outcomes{gap:5px;flex-wrap:wrap}
+  .film-finale-outcomes b{font-size:7px}
+  .post-film-card{padding:14px!important}
+}
+@media(max-width:520px){
+  .judge-film-stepper>i{display:none}
+  .judge-film-stepper{
+    grid-template-columns:repeat(5,1fr);
+    gap:3px;
+  }
+  .judge-film-stepper>span{text-align:center;padding:4px 2px;font-size:5px}
+  .post-film-hero h2{font-size:25px!important}
+  .determinism-proof-primary .determinism-actions{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  .prop-object.is-new-variable,
+  .film-finale.is-on strong,
+  .film-finale.is-on span,
+  .film-finale.is-on em,
+  .film-finale.is-on .film-finale-outcomes{animation:none!important}
+}

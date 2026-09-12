@@ -116,6 +116,7 @@
     chainBadge: $("#chainBadge"),
     sceneFocus: $("#sceneFocus"),
     consequenceFlash: $("#consequenceFlash"),
+    filmFinale: $("#filmFinale"),
     physicsLayer: $("#physicsLayer"),
     physicsActor: $("#physicsActor"),
     physicsRule: $("#physicsRule"),
@@ -124,6 +125,7 @@
     physicsAction: $("#physicsAction"),
     physicsConsequence: $("#physicsConsequence"),
     judgeProgress: $("#judgeProgress"),
+    judgeFilmStepper: $("#judgeFilmStepper"),
     judgeRoundLabel: $("#judgeRoundLabel"),
     judgeProgressText: $("#judgeProgressText"),
     judgeProgressFill: $("#judgeProgressFill"),
@@ -177,6 +179,7 @@
     hideChainBadge();
     hidePhysics();
     clearVisualFocus();
+    resetJudgeFilmVisuals();
     setChaos(8);
   }
 
@@ -428,7 +431,7 @@
     await moveObject("actor", key, x, y, duration);
   }
 
-  async function dramaticEscapeWithProp(actorKey) {
+  async function dramaticEscapeWithProp(actorKey, options = {}) {
     const actor = actorByKey(actorKey);
     const el = actorElement(actorKey);
     if (!actor || !el) return;
@@ -436,20 +439,19 @@
     els.stage.classList.add("is-payoff");
     el.classList.add("is-payoff-escape", "is-active-character");
     flashConsequence("payoff");
-    await sleep(120);
+    await sleep(options.escapeAnticipation ?? 120);
 
     const escapeX = actor.x > 50 ? 91 : 9;
     const escapeY = clamp(actor.y - 8, 28, 78);
-    await walkActorTo(actorKey, escapeX, escapeY, 760);
+    await walkActorTo(actorKey, escapeX, escapeY, options.escapeDuration ?? 760);
 
     react(actorKey, actorKey === "plankton" ? "Mine!" : "Got it!", "PAYOFF");
-    await sleep(280);
+    await sleep(options.escapeHold ?? 280);
     flashConsequence("payoff");
 
     el.classList.remove("is-payoff-escape");
     setTimeout(() => els.stage?.classList.remove("is-payoff"), 500);
   }
-
 
   function setCarry(actorKey, propKey) {
     const actor = actorByKey(actorKey);
@@ -628,19 +630,26 @@
 
     const target = event.target && propByKey(event.target);
     const actor = actorByKey(event.actor);
+    const showRule = options.showRule !== false;
 
-    // 1) Stimulus appears and the relevant character/target become the visual focus.
+    // 1) Stimulus.
     focusVisualEvent(event.actor, event.target || null, "stimulus");
     await sleep(options.stimulusPause ?? 150);
     if (token !== state.runToken) return false;
 
-    // 2) Reveal the winning personality rule as a short X-ray, not a dashboard.
+    // 2) Winning rule. Judge film can flash this briefly instead of
+    // leaving a technical panel over the animation.
     els.stage.dataset.visualPhase = "rule";
-    showPhysics(event);
-    await sleep(options.rulePause ?? 190);
-    if (token !== state.runToken) return false;
+    if (showRule) {
+      showPhysics(event);
+      await sleep(options.rulePause ?? 190);
+      if (token !== state.runToken) return false;
+      if (options.briefRule) hidePhysics();
+    } else {
+      hidePhysics();
+    }
 
-    // 3) Movement follows the selected target.
+    // 3) Movement.
     els.stage.dataset.visualPhase = "movement";
     if (target && actor) {
       const side = actor.x <= target.x ? -8 : 8;
@@ -653,7 +662,7 @@
     }
     if (token !== state.runToken) return false;
 
-    // 4) Character reaction.
+    // 4) Reaction.
     els.stage.dataset.visualPhase = "reaction";
     react(event.actor, event.text, event.trait);
     showNarrator(
@@ -673,7 +682,7 @@
     await sleep(options.reactionHold ?? 760);
     if (token !== state.runToken) return false;
 
-    // 5) Consequence changes the world state.
+    // 5) Consequence.
     els.stage.dataset.visualPhase = "consequence";
     if (event.grabs) {
       markPropTaken(event.grabs, true, event.actor);
@@ -682,7 +691,7 @@
 
     if (event.takes) {
       markPropTaken(event.takes, true, event.actor);
-      await dramaticEscapeWithProp(event.actor);
+      await dramaticEscapeWithProp(event.actor, options);
     } else {
       flashConsequence("normal");
       await sleep(options.consequencePause ?? 180);
@@ -693,6 +702,55 @@
     hideNarrator();
     clearVisualFocus();
     return true;
+  }
+
+  const JUDGE_FILM_STEPS = ["setup", "round1", "variable", "round2", "proof"];
+
+  function setJudgeFilmStep(step) {
+    const activeIndex = JUDGE_FILM_STEPS.indexOf(step);
+    if (!els.judgeFilmStepper || activeIndex < 0) return;
+    $("[data-film-step]", els.judgeFilmStepper).forEach(node => {
+      const index = JUDGE_FILM_STEPS.indexOf(node.dataset.filmStep);
+      node.classList.toggle("is-active", index === activeIndex);
+      node.classList.toggle("is-done", index < activeIndex);
+    });
+  }
+
+  function setVariableFreeze(on) {
+    els.stage.classList.toggle("is-variable-freeze", on);
+    const money = propElement("money");
+    if (money) money.classList.toggle("is-new-variable", on);
+  }
+
+  function showFilmFinale(on = true) {
+    if (!els.filmFinale) return;
+    els.filmFinale.classList.toggle("is-on", on);
+    els.filmFinale.setAttribute("aria-hidden", on ? "false" : "true");
+  }
+
+  function resetJudgeFilmVisuals() {
+    if (!els.stage) return;
+    els.stage.classList.remove("is-variable-freeze");
+    $(".prop-object.is-new-variable", els.stage).forEach(el => el.classList.remove("is-new-variable"));
+    showFilmFinale(false);
+  }
+
+  async function judgeFilmEvent(token, event, progress, options = {}) {
+    return performVisualEvent(token, event, {
+      chaosMode:"set",
+      progress,
+      minX:8,
+      maxX:92,
+      minY:20,
+      maxY:90,
+      stimulusPause:70,
+      moveDuration:360,
+      reactionHold:390,
+      consequencePause:90,
+      briefRule:true,
+      rulePause:420,
+      ...options
+    });
   }
 
   function showChainBadge(step, total, label) {
@@ -1402,7 +1460,7 @@
     ].map(x => "<li>" + x + "</li>").join("");
   }
 
-  async function judgeEvent(token, event, progress) {
+  async function judgeEvent(token, event, progress, options = {}) {
     return performVisualEvent(token, event, {
       chaosMode:"set",
       progress,
@@ -1411,7 +1469,8 @@
       minY:20,
       maxY:90,
       moveDuration:550,
-      reactionHold:780
+      reactionHold:780,
+      ...options
     });
   }
 
@@ -1483,76 +1542,149 @@
 
   async function openJudge() {
     const token = ++state.runToken;
+    const filmStartedAt = Date.now();
+
     showScreen("play");
     setModeChrome("judge");
     setScene("krusty");
     els.judgeProgress.hidden = false;
     els.judgeProgressFill.style.width = "0%";
     els.compareOverlay.hidden = true;
+    resetJudgeFilmVisuals();
 
+    // 0–2s · SETUP
     setupJudgeRound(false);
     const round1 = resolveJudgeScenario();
     state.judgeBaselineScenario = round1;
     state.determinismBaseline = captureJudgeFingerprint(round1);
 
     setChaos(8);
-    els.judgeRoundLabel.textContent = "ROUND 1";
-    els.judgeProgressText.textContent = "Original setup";
-    overlay("ROUND 1\nORIGINAL SETUP");
-    await sleep(900);
+    setJudgeFilmStep("setup");
+    els.judgeRoundLabel.textContent = "SETUP";
+    els.judgeProgressText.textContent = "Same setup = same outcome";
+    els.judgeProgressFill.style.width = "5%";
+    overlay("SAME SETUP\n= SAME OUTCOME");
+    await sleep(1650);
     if (token !== state.runToken) return;
     overlay("", false);
 
-    for (let i = 0; i < round1.events.length; i++) {
-      const ok = await judgeEvent(token, round1.events[i], 8 + (i + 1) * 9);
+    // 2–7s · ROUND 1
+    setJudgeFilmStep("round1");
+    els.judgeRoundLabel.textContent = "ROUND 1";
+    els.judgeProgressText.textContent = "Original setup";
+    // Patrick remains in the setup, but his neutral “I’ll just watch”
+    // event is intentionally not cut into the film. The proof trace still
+    // records it; the cinematic cut only shows causal actions.
+    const round1VisibleEvents = round1.events.filter(event => !(event.actor === "patrick" && !event.target));
+    const round1Film = [
+      { showRule:true,  progress:17 },
+      { showRule:true,  progress:29 },
+      { showRule:false, progress:42 }
+    ];
+
+    for (let i = 0; i < round1VisibleEvents.length; i++) {
+      const ok = await judgeFilmEvent(
+        token,
+        round1VisibleEvents[i],
+        round1Film[i]?.progress ?? (17 + i * 12),
+        round1Film[i] || {}
+      );
       if (!ok) return;
     }
 
-    hideNarrator();
-    hidePhysics();
-    showBanner("ROUND 1 OUTCOME: " + round1.outcome);
-    els.judgeProgressFill.style.width = "48%";
-    await sleep(950);
+    showBanner("ROUND 1 · " + round1.outcome);
+    els.judgeProgressFill.style.width = "46%";
+    await sleep(620);
     if (token !== state.runToken) return;
     hideBanner();
 
-    overlay("🦋 CHANGE ONE THING");
-    els.butterflyFx.classList.add("is-on");
-    els.changeBadge.innerHTML = "ADD<br><span style=\"font-size:34px\">💵</span> MONEY";
-    els.changeBadge.classList.add("is-on");
-    await sleep(950);
-    if (token !== state.runToken) return;
+    // 7–9s · Freeze the experiment and reveal exactly one new input.
+    setJudgeFilmStep("variable");
+    els.judgeRoundLabel.textContent = "+1 VARIABLE";
+    els.judgeProgressText.textContent = "Everything else stays the same";
+    els.judgeProgressFill.style.width = "50%";
 
     setupJudgeRound(true);
     const round2 = resolveJudgeScenario();
     state.judgeChangedScenario = round2;
+
+    setVariableFreeze(true);
+    els.butterflyFx.classList.add("is-on");
+    els.changeBadge.innerHTML = "🦋 CHANGE ONE THING<br><span style=\"font-size:34px\">💵</span><br>+ MONEY";
+    els.changeBadge.classList.add("is-on");
+    overlay("ONE NEW VARIABLE");
+    await sleep(1700);
+    if (token !== state.runToken) return;
+
+    overlay("", false);
     els.changeBadge.classList.remove("is-on");
     els.butterflyFx.classList.remove("is-on");
-    overlay("", false);
+    setVariableFreeze(false);
+
+    // 9–15/17s · ROUND 2
+    setJudgeFilmStep("round2");
     els.judgeRoundLabel.textContent = "ROUND 2";
-    els.judgeProgressText.textContent = "Same setup + 💵 MONEY";
-    els.judgeProgressFill.style.width = "55%";
-    showBanner("SAME CHARACTERS · SAME SCENE · + 💵 MONEY");
-    await sleep(850);
+    els.judgeProgressText.textContent = "Same world + 💵 MONEY";
+    els.judgeProgressFill.style.width = "54%";
+    showBanner("SAME WORLD · + 💵 MONEY");
+    await sleep(480);
     if (token !== state.runToken) return;
     hideBanner();
 
+    const round2Film = [
+      { showRule:false, progress:64, reactionHold:400 },
+      { showRule:true,  progress:74, reactionHold:430 },
+      { showRule:false, progress:83, reactionHold:400 },
+      {
+        showRule:true,
+        progress:94,
+        reactionHold:410,
+        moveDuration:350,
+        escapeAnticipation:110,
+        escapeDuration:950,
+        escapeHold:300
+      }
+    ];
+
     for (let i = 0; i < round2.events.length; i++) {
-      const ok = await judgeEvent(token, round2.events[i], 61 + (i + 1) * 9);
+      if (i === round2.events.length - 1) {
+        showBanner("NO DEFENDERS LEFT");
+        await sleep(540);
+        if (token !== state.runToken) return;
+        hideBanner();
+      }
+
+      const ok = await judgeFilmEvent(token, round2.events[i], round2Film[i]?.progress ?? (64 + i * 10), round2Film[i] || {});
       if (!ok) return;
     }
 
-    hideNarrator();
-    hidePhysics();
-    showBanner("ROUND 2 OUTCOME: " + round2.outcome);
-    els.judgeProgressFill.style.width = "100%";
-    await sleep(1000);
+    showBanner("ROUND 2 · " + round2.outcome);
+    els.judgeProgressFill.style.width = "97%";
+    await sleep(620);
     if (token !== state.runToken) return;
     hideBanner();
 
+    // 17–20s · FINAL FRAME
+    setJudgeFilmStep("proof");
+    els.judgeRoundLabel.textContent = "PROOF";
+    els.judgeProgressText.textContent = "Same personalities. One new variable.";
+    els.judgeProgressFill.style.width = "100%";
+    showFilmFinale(true);
+
+    // Keep the total experience close to 20 seconds even if the browser
+    // renders individual animation frames slightly faster or slower.
+    const elapsed = Date.now() - filmStartedAt;
+    const finaleHold = clamp(19800 - elapsed, 2400, 4200);
+    await sleep(finaleHold);
+    if (token !== state.runToken) return;
+
+    showFilmFinale(false);
     fillJudgeComparison();
     setDeterminismPanel("baseline", state.determinismBaseline);
+
+    // Land directly on the proof instead of a wall of explanation.
     els.compareOverlay.hidden = false;
+    els.compareOverlay.scrollTop = 0;
   }
 
   async function openExample() {
@@ -1636,6 +1768,7 @@
     hideBanner();
     hideChainBadge();
     hidePhysics();
+    resetJudgeFilmVisuals();
     showScreen("home");
     state.mode = "home";
   }
