@@ -815,6 +815,67 @@
     if (includeMoney) addProp("money", 81, 58);
   }
 
+  function fingerprint(value) {
+    return "#" + hashString(value).toString(16).padStart(8, "0").toUpperCase();
+  }
+
+  function traceSignature(scenario) {
+    return scenario.events.map((event, index) => [
+      index,
+      event.actor,
+      event.target || "-",
+      event.text,
+      event.trait,
+      event.grabs || "-",
+      event.takes || "-"
+    ].join(":")).join("|") + "|OUTCOME:" + scenario.outcome;
+  }
+
+  function captureJudgeFingerprint(scenario) {
+    return {
+      setupHash: fingerprint(setupSignature()),
+      traceHash: fingerprint(traceSignature(scenario)),
+      outcome: scenario.outcome
+    };
+  }
+
+  function setDeterminismPanel(mode, data) {
+    if (!els.determinismStatus) return;
+
+    els.determinismSetupHash.textContent = data.setupHash;
+    els.determinismTraceHash.textContent = data.traceHash;
+    els.determinismOutcome.textContent = data.outcome;
+    els.determinismStatus.className = "determinism-status " + mode;
+
+    if (mode === "match") {
+      els.determinismStatus.textContent = "✓ MATCH VERIFIED";
+      els.determinismMessage.innerHTML = "<strong>Same setup fingerprint. Same ordered action trace. Same outcome.</strong> No random branch was introduced.";
+    } else if (mode === "changed") {
+      els.determinismStatus.textContent = "🦋 TRACE CHANGED";
+      els.determinismMessage.innerHTML = "<strong>One input changed: + 💵 MONEY.</strong> The setup fingerprint changed, the decision trace changed, and the episode branched.";
+    } else {
+      els.determinismStatus.textContent = "BASELINE CAPTURED";
+      els.determinismMessage.textContent = "Run the exact same input again. If the ordered action trace matches, the same world state produced the same episode.";
+    }
+  }
+
+  function fillJudgeComparison() {
+    els.roundOneOutcome.textContent = JUDGE_SCENARIOS.baseline.outcome;
+    els.roundTwoOutcome.textContent = JUDGE_SCENARIOS.changed.outcome;
+    els.roundOneEvents.innerHTML = [
+      "Plankton targets formula",
+      "SpongeBob protects it",
+      "Mr. Krabs guards the restaurant",
+      "Patrick has no stronger trigger"
+    ].map(x => "<li>" + x + "</li>").join("");
+    els.roundTwoEvents.innerHTML = [
+      "Patrick notices money",
+      "Mr. Krabs abandons the formula for money",
+      "SpongeBob follows the commotion",
+      "Plankton uses the distraction"
+    ].map(x => "<li>" + x + "</li>").join("");
+  }
+
   async function judgeEvent(token, event, progress) {
     if (token !== state.runToken) return false;
     showPhysics(event);
@@ -832,12 +893,78 @@
     els.judgeProgressFill.style.width = progress + "%";
     await sleep(1050);
     if (event.grabs) markPropTaken(event.grabs, true, event.actor);
-      if (event.takes) {
-        markPropTaken(event.takes, true, event.actor);
-        const thief = actorByKey(event.actor);
-        if (thief) await walkActorTo(event.actor, clamp(thief.x - 22, 8, 92), clamp(thief.y + 6, 18, 90), 520);
-      }
+    if (event.takes) {
+      markPropTaken(event.takes, true, event.actor);
+      const thief = actorByKey(event.actor);
+      if (thief) await walkActorTo(event.actor, clamp(thief.x - 22, 8, 92), clamp(thief.y + 6, 18, 90), 520);
+    }
     return token === state.runToken;
+  }
+
+  async function playVerificationScenario(scenarioKey) {
+    const scenario = JUDGE_SCENARIOS[scenarioKey];
+    const token = ++state.runToken;
+
+    showScreen("play");
+    setModeChrome("judge");
+    els.compareOverlay.hidden = true;
+    els.judgeProgress.hidden = false;
+    els.judgeProgressFill.style.width = "0%";
+
+    setupJudgeRound(scenario.includeMoney);
+    const runFingerprint = captureJudgeFingerprint(scenario);
+    setChaos(8);
+
+    els.judgeRoundLabel.textContent = scenarioKey === "baseline" ? "DETERMINISM TEST" : "VARIABLE TEST";
+    els.judgeProgressText.textContent = scenarioKey === "baseline" ? "Exact same inputs" : "Only + 💵 MONEY changed";
+
+    if (scenarioKey === "baseline") {
+      overlay("↻ SAME SETUP\nRUNNING AGAIN");
+    } else {
+      overlay("🦋 CHANGE ONE VARIABLE\n+ 💵 MONEY");
+    }
+
+    await sleep(850);
+    if (token !== state.runToken) return;
+    overlay("", false);
+
+    for (let i = 0; i < scenario.events.length; i++) {
+      const progress = 12 + Math.round(((i + 1) / scenario.events.length) * 78);
+      const ok = await judgeEvent(token, scenario.events[i], progress);
+      if (!ok) return;
+    }
+
+    hideNarrator();
+    hidePhysics();
+    els.judgeProgressFill.style.width = "100%";
+
+    if (scenarioKey === "baseline") {
+      const baseline = state.determinismBaseline;
+      const exactMatch = baseline &&
+        baseline.setupHash === runFingerprint.setupHash &&
+        baseline.traceHash === runFingerprint.traceHash &&
+        baseline.outcome === runFingerprint.outcome;
+
+      showBanner(exactMatch ? "✓ VERIFIED: SAME SETUP → SAME TRACE → SAME OUTCOME" : "⚠ TRACE MISMATCH");
+      await sleep(1250);
+      if (token !== state.runToken) return;
+      hideBanner();
+      setDeterminismPanel(exactMatch ? "match" : "baseline", runFingerprint);
+    } else {
+      const baseline = state.determinismBaseline;
+      const changedAsExpected = baseline &&
+        baseline.setupHash !== runFingerprint.setupHash &&
+        baseline.traceHash !== runFingerprint.traceHash;
+
+      showBanner(changedAsExpected ? "🦋 ONE VARIABLE CHANGED → NEW TRACE" : "VARIABLE TEST COMPLETE");
+      await sleep(1250);
+      if (token !== state.runToken) return;
+      hideBanner();
+      setDeterminismPanel("changed", runFingerprint);
+    }
+
+    fillJudgeComparison();
+    els.compareOverlay.hidden = false;
   }
 
   async function openJudge() {
@@ -849,7 +976,10 @@
     els.judgeProgressFill.style.width = "0%";
     els.compareOverlay.hidden = true;
 
-    setupJudgeRound(false);
+    const round1 = JUDGE_SCENARIOS.baseline;
+    setupJudgeRound(round1.includeMoney);
+    state.determinismBaseline = captureJudgeFingerprint(round1);
+
     setChaos(8);
     els.judgeRoundLabel.textContent = "ROUND 1";
     els.judgeProgressText.textContent = "Original setup";
@@ -858,21 +988,14 @@
     if (token !== state.runToken) return;
     overlay("", false);
 
-    const round1 = [
-      { actor:"plankton", text:"Formula detected.", trait:"FORMULA-OBSESSED", why:"Plankton always targets the formula.", target:"formula", chaos:25 },
-      { actor:"spongebob", text:"Protect the formula!", trait:"LOYAL · PROTECTIVE", why:"SpongeBob reacts to protect what he cares about.", target:"formula", chaos:34 },
-      { actor:"mrkrabs", text:"Nobody touches me formula!", trait:"PROTECTIVE", why:"Mr. Krabs protects the restaurant.", target:"formula", chaos:38 },
-      { actor:"patrick", text:"I’ll just watch.", trait:"CURIOUS", why:"Nothing in this setup strongly tempts Patrick.", chaos:36 }
-    ];
-
-    for (let i = 0; i < round1.length; i++) {
-      const ok = await judgeEvent(token, round1[i], 8 + (i + 1) * 9);
+    for (let i = 0; i < round1.events.length; i++) {
+      const ok = await judgeEvent(token, round1.events[i], 8 + (i + 1) * 9);
       if (!ok) return;
     }
 
     hideNarrator();
     hidePhysics();
-    showBanner("ROUND 1 OUTCOME: ✅ FORMULA SAFE");
+    showBanner("ROUND 1 OUTCOME: " + round1.outcome);
     els.judgeProgressFill.style.width = "48%";
     await sleep(950);
     if (token !== state.runToken) return;
@@ -885,7 +1008,8 @@
     await sleep(950);
     if (token !== state.runToken) return;
 
-    setupJudgeRound(true);
+    const round2 = JUDGE_SCENARIOS.changed;
+    setupJudgeRound(round2.includeMoney);
     els.changeBadge.classList.remove("is-on");
     els.butterflyFx.classList.remove("is-on");
     overlay("", false);
@@ -897,40 +1021,21 @@
     if (token !== state.runToken) return;
     hideBanner();
 
-    const round2 = [
-      { actor:"patrick", text:"Ooooh… money.", trait:"IMPULSIVE", why:"Money becomes Patrick’s strongest new stimulus.", target:"money", chaos:48 },
-      { actor:"mrkrabs", text:"MONEY?!", trait:"MONEY > EVERYTHING", why:"Mr. Krabs immediately prioritizes money.", target:"money", chaos:61, grabs:"money" },
-      { actor:"spongebob", text:"Mr. Krabs?", trait:"HELPFUL · DISTRACTIBLE", why:"SpongeBob follows the new commotion.", target:"money", chaos:70 },
-      { actor:"plankton", text:"Perfect distraction.", trait:"SCHEMING", why:"Plankton exploits the opening created by everyone else.", target:"formula", chaos:88, takes:"formula" }
-    ];
-
-    for (let i = 0; i < round2.length; i++) {
-      const ok = await judgeEvent(token, round2[i], 61 + (i + 1) * 9);
+    for (let i = 0; i < round2.events.length; i++) {
+      const ok = await judgeEvent(token, round2.events[i], 61 + (i + 1) * 9);
       if (!ok) return;
     }
 
     hideNarrator();
     hidePhysics();
-    showBanner("ROUND 2 OUTCOME: ❌ PLANKTON STEALS THE FORMULA");
+    showBanner("ROUND 2 OUTCOME: " + round2.outcome);
     els.judgeProgressFill.style.width = "100%";
     await sleep(1000);
     if (token !== state.runToken) return;
     hideBanner();
 
-    els.roundOneOutcome.textContent = "✅ FORMULA SAFE";
-    els.roundTwoOutcome.textContent = "❌ FORMULA STOLEN";
-    els.roundOneEvents.innerHTML = [
-      "Plankton targets formula",
-      "SpongeBob protects it",
-      "Mr. Krabs guards the restaurant",
-      "Patrick has no stronger trigger"
-    ].map(x => "<li>" + x + "</li>").join("");
-    els.roundTwoEvents.innerHTML = [
-      "Patrick notices money",
-      "Mr. Krabs abandons the formula for money",
-      "SpongeBob follows the commotion",
-      "Plankton uses the distraction"
-    ].map(x => "<li>" + x + "</li>").join("");
+    fillJudgeComparison();
+    setDeterminismPanel("baseline", state.determinismBaseline);
     els.compareOverlay.hidden = false;
   }
 
