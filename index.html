@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0873b5" />
+  <meta name="description" content="Drop the cast into a scene. Their personalities do the rest." />
+  <title>Bikini Bottom: Personality Physics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <section id="home" class="screen screen-home is-active" aria-label="Home">
+      <div class="ocean-glow ocean-glow-a"></div>
+      <div class="ocean-glow ocean-glow-b"></div>
+      <div class="bubble-field" aria-hidden="true">
+        <i style="--x:8%;--s:18px;--d:8s"></i>
+        <i style="--x:24%;--s:10px;--d:10s"></i>
+        <i style="--x:64%;--s:24px;--d:9s"></i>
+        <i style="--x:82%;--s:13px;--d:11s"></i>
+      </div>
+
+      <div class="hero-shell">
+        <div class="hero-copy">
+          <div class="eyebrow">AN INTERACTIVE CARTOON SIMULATION</div>
+          <h1>BIKINI BOTTOM:<br><span>PERSONALITY PHYSICS</span></h1>
+          <p class="hero-tagline">Drop the cast into a scene.<br><strong>Their personalities do the rest.</strong></p>
+
+          <div class="physics-rules" aria-label="Simulation rules">
+            <span>⚡ SAME SETUP = SAME OUTCOME</span>
+            <span>🦋 CHANGE ONE THING = NEW CHAIN REACTION</span>
+          </div>
+
+          <div class="hero-cta judge-path">
+            <button id="btnJudge" class="btn btn-primary btn-judge" aria-label="Play the 20-second judge demo">
+              <span class="btn-kicker">THE FASTEST WAY TO GET IT</span>
+              <span class="judge-cta-label">⚡ PLAY THE 20-SECOND DEMO</span>
+              <span class="judge-cta-sub">One setup. One tiny change. A completely different episode.</span>
+            </button>
+            <div class="secondary-label">OR EXPLORE YOURSELF</div>
+            <div class="secondary-modes" aria-label="Other modes">
+              <button id="btnChaos" class="mode-link">Chaos Setup</button>
+              <span aria-hidden="true">·</span>
+              <button id="btnDirector" class="mode-link">Director Mode</button>
+              <span aria-hidden="true">·</span>
+              <button id="btnConch" class="mode-link">Magic Conch</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-world" aria-label="Character motivations">
+          <div class="hero-stage-card">
+            <div class="hero-stage-label">WHAT THE CAST “WANTS”</div>
+            <div class="hero-stage">
+              <div class="hero-prop formula-prop">📜<small>FORMULA</small></div>
+              <div class="hero-prop money-prop">💵<small>MONEY</small></div>
+
+              <div class="hero-character hero-plankton">
+                <div class="toon toon-plankton"><span></span></div>
+                <div class="thought thought-left">Formula detected.</div>
+                <strong>PLANKTON</strong>
+                <small>GET THE FORMULA</small>
+              </div>
+
+              <div class="hero-character hero-spongebob">
+                <div class="toon toon-spongebob"><span></span></div>
+                <div class="thought thought-right">Protect it!</div>
+                <strong>SPONGEBOB</strong>
+                <small>HELP · PROTECT</small>
+              </div>
+
+              <div class="hero-character hero-patrick">
+                <div class="toon toon-patrick"><span></span></div>
+                <div class="thought thought-right">Ooooh… money.</div>
+                <strong>PATRICK</strong>
+                <small>CURIOUS · IMPULSIVE</small>
+              </div>
+
+              <div class="hero-character hero-squidward">
+                <div class="toon toon-squidward"><span></span></div>
+                <div class="thought thought-left">Of course.</div>
+                <strong>SQUIDWARD</strong>
+                <small>AVOID CHAOS</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="trait-strip" aria-label="Character personality rules">
+        <article class="trait-card" data-character="spongebob">
+          <div class="mini-toon toon-spongebob"><span></span></div>
+          <div><b>SPONGEBOB</b><small>HELPFUL · LOYAL · EASILY DISTRACTED</small></div>
+        </article>
+        <article class="trait-card" data-character="patrick">
+          <div class="mini-toon toon-patrick"><span></span></div>
+          <div><b>PATRICK</b><small>CURIOUS · IMPULSIVE · TEMPTED BY MONEY</small></div>
+        </article>
+        <article class="trait-card" data-character="squidward">
+          <div class="mini-toon toon-squidward"><span></span></div>
+          <div><b>SQUIDWARD</b><small>IRRITABLE · PROTECTS HIS CLARINET</small></div>
+        </article>
+        <article class="trait-card" data-character="mrkrabs">
+          <div class="mini-toon toon-mrkrabs"><span></span></div>
+          <div><b>MR. KRABS</b><small>MONEY-OBSESSED · PROTECTIVE</small></div>
+        </article>
+        <article class="trait-card" data-character="plankton">
+          <div class="mini-toon toon-plankton"><span></span></div>
+          <div><b>PLANKTON</b><small>FORMULA-OBSESSED · SCHEMING</small></div>
+        </article>
+      </div>
+
+      <section class="example-episode-card" aria-label="Example episode">
+        <div class="example-episode-art" aria-hidden="true">
+          <div class="example-mini-stage">
+            <div class="toon toon-plankton"><span></span></div>
+            <span class="example-arrow">→</span>
+            <span class="example-formula">📜</span>
+            <span class="example-impact">💥</span>
+          </div>
+        </div>
+        <div class="example-episode-copy">
+          <span class="example-kicker">EXAMPLE EPISODE</span>
+          <h2>Plankton’s Very Bad Day</h2>
+          <p>Want a longer story after the 20-second experiment? Watch one deterministic episode play out from start to finish.</p>
+        </div>
+        <button id="btnExample" class="btn btn-light example-episode-button">🎬 WATCH EXAMPLE</button>
+      </section>
+    </section>
+
+    <section id="play" class="screen screen-play" aria-label="Simulation">
+      <header class="topbar">
+        <button id="btnHome" class="icon-btn" aria-label="Back home">←</button>
+        <div class="brand-block">
+          <strong id="modeTitle">PERSONALITY PHYSICS</strong>
+          <small id="modeSubtitle">Same setup. Same outcome.</small>
+        </div>
+        <div class="chaos-wrap">
+          <div class="chaos-label"><span>🌊 CHAOS</span><b id="chaosPct">8%</b></div>
+          <div class="chaos-track"><div id="chaosFill" class="chaos-fill"></div></div>
+        </div>
+        <button id="btnVoice" class="icon-btn voice-btn" aria-label="Toggle voices">🔇 <span>MUTED</span></button>
+      </header>
+
+      <div class="scene-toolbar" id="sceneToolbar">
+        <span>SCENE</span>
+        <button class="scene-chip is-active" data-scene="krusty">Krusty Krab</button>
+        <button class="scene-chip" data-scene="chum">Chum Bucket Lab</button>
+        <button class="scene-chip" data-scene="fields">Jellyfish Fields</button>
+        <button class="scene-chip" data-scene="house">SpongeBob’s House</button>
+        <button class="scene-chip" data-scene="street">Conch Street</button>
+      </div>
+
+      <main class="workspace">
+        <div class="stage-column">
+          <div id="stage" class="stage scene-krusty" aria-label="Interactive scene">
+            <div class="stage-sky"></div>
+            <div class="stage-backdrop">
+              <div class="scene-title" id="sceneTitle">THE KRUSTY KRAB</div>
+              <div class="window window-a"></div>
+              <div class="window window-b"></div>
+              <div class="counter-art"></div>
+              <div class="booth-art"></div>
+              <div class="kelp kelp-a"></div>
+              <div class="kelp kelp-b"></div>
+            </div>
+
+            <div id="judgeOverlay" class="judge-overlay" aria-live="polite"></div>
+            <div id="butterflyFx" class="butterfly-fx">🦋</div>
+            <div id="changeBadge" class="change-badge"></div>
+            <div id="stageBanner" class="stage-banner"></div>
+            <div id="chainBadge" class="chain-badge" aria-live="polite"></div>
+            <div id="narrator" class="narrator"></div>
+
+            <aside id="physicsLayer" class="physics-layer" aria-live="polite" aria-label="Explain the physics">
+              <div class="physics-layer-head">
+                <span>🧠 EXPLAIN THE PHYSICS</span>
+                <small>live decision rule</small>
+              </div>
+              <div class="physics-rule-line">
+                <strong id="physicsActor">PLANKTON</strong>
+                <span aria-hidden="true">→</span>
+                <code id="physicsRule">formula_obsession = HIGH</code>
+              </div>
+              <div class="physics-mini-flow">
+                <div><small>INPUT</small><b id="physicsInput">📜 Formula visible</b></div>
+                <span>→</span>
+                <div><small>RULE</small><b id="physicsRuleShort">Target formula</b></div>
+                <span>→</span>
+                <div><small>ACTION</small><b id="physicsAction">Move toward formula</b></div>
+                <span>→</span>
+                <div><small>CONSEQUENCE</small><b id="physicsConsequence">Defense triggered</b></div>
+              </div>
+            </aside>
+
+            <div id="stageActors" class="stage-objects"></div>
+            <div id="stageProps" class="stage-objects"></div>
+          </div>
+
+          <div id="judgeProgress" class="judge-progress" hidden>
+            <div class="judge-progress-head">
+              <b id="judgeRoundLabel">ROUND 1</b>
+              <span id="judgeProgressText">Original setup</span>
+            </div>
+            <div class="judge-progress-track"><i id="judgeProgressFill"></i></div>
+          </div>
+        </div>
+
+        <aside id="directorPanel" class="director-panel" hidden>
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">DIRECTOR MODE</span>
+              <h2>BUILD AN EPISODE</h2>
+            </div>
+            <div class="determinism-pill">⚡ DETERMINISTIC</div>
+          </div>
+          <p class="panel-help">Add characters and props, drag them anywhere, then press <b>ACTION</b>. Placement + personality rules determine the chain reaction.</p>
+
+          <section class="director-surprise-card" aria-label="Motivation Collision setup">
+            <div class="director-surprise-head">
+              <div>
+                <span class="panel-kicker">TRY ONE SURPRISING SETUP</span>
+                <h3>MOTIVATION COLLISION</h3>
+              </div>
+              <span class="emergent-pill">NOT A SCRIPT</span>
+            </div>
+            <div class="surprise-map" aria-hidden="true">
+              <span>📜</span><span>↔</span><b>PLANKTON</b>
+              <i>·</i>
+              <b>PATRICK</b><span>→</span><span>💵</span>
+              <i>·</i>
+              <span>🎵</span><span>↔</span><b>SQUIDWARD</b>
+              <i>·</i>
+              <span>💵</span><span>↔</span><b>KRABS</b>
+            </div>
+            <p>Money pulls Patrick across Squidward’s clarinet while Krabs chooses between cash and the formula. Plankton watches for the opening.</p>
+            <button id="btnLoadChainReaction" class="btn btn-surprise">⚡ LOAD CHAIN REACTION</button>
+          </section>
+
+          <div class="tray-section">
+            <h3>CAST</h3>
+            <div id="castTray" class="object-grid"></div>
+          </div>
+
+          <div class="tray-section">
+            <h3>PROPS</h3>
+            <div id="propTray" class="object-grid"></div>
+          </div>
+
+          <div class="panel-actions">
+            <button id="btnAction" class="btn btn-primary">▶ ACTION</button>
+            <button id="btnReset" class="btn btn-light">↺ RESET</button>
+          </div>
+        </aside>
+      </main>
+
+      <section id="resultDock" class="result-dock" hidden>
+        <div class="result-summary">
+          <div>
+            <span class="panel-kicker">SIMULATION RESULT</span>
+            <h2 id="resultHeadline">THE FORMULA IS SAFE</h2>
+          </div>
+          <button id="btnCloseResult" class="icon-btn">×</button>
+        </div>
+        <div class="result-grid">
+          <div>
+            <h3>WHAT HAPPENED</h3>
+            <ol id="eventTimeline" class="timeline"></ol>
+          </div>
+          <div>
+            <h3>WHY IT HAPPENED</h3>
+            <div id="causeFlow" class="cause-flow"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="compareOverlay" class="compare-overlay" hidden aria-live="polite">
+        <div class="compare-card">
+          <span class="panel-kicker">BUTTERFLY EFFECT</span>
+          <h2>ONE SMALL CHANGE.<br><em>A DIFFERENT EPISODE.</em></h2>
+
+          <div class="change-callout">
+            <span>🦋 CHANGE ONE THING</span>
+            <b>+ 💵 MONEY</b>
+            <small>Same characters. Same scene. Same starting positions.</small>
+          </div>
+
+          <div class="comparison-grid">
+            <article>
+              <span>ROUND 1</span>
+              <h3 id="roundOneOutcome">FORMULA SAFE</h3>
+              <ol id="roundOneEvents"></ol>
+            </article>
+            <article class="branch-changed">
+              <span>ROUND 2 · + MONEY</span>
+              <h3 id="roundTwoOutcome">FORMULA STOLEN</h3>
+              <ol id="roundTwoEvents"></ol>
+            </article>
+          </div>
+
+          <p class="compare-explainer">Characters weren’t given a new script. <strong>Their personalities reacted to the new situation.</strong></p>
+
+          <section class="physics-proof" aria-label="Decision physics comparison">
+            <div class="physics-proof-head">
+              <span class="panel-kicker">EXPLAIN THE PHYSICS</span>
+              <h3>Input → personality rule → action → consequence</h3>
+            </div>
+
+            <div class="physics-proof-row">
+              <span class="physics-round-tag">ROUND 1</span>
+              <div class="physics-proof-node"><small>INPUT</small><b>📜 Formula visible</b></div>
+              <span class="physics-proof-arrow">→</span>
+              <div class="physics-proof-node rule"><small>PERSONALITY RULE</small><code>SPONGEBOB → protect = HIGH</code></div>
+              <span class="physics-proof-arrow">→</span>
+              <div class="physics-proof-node"><small>ACTION</small><b>Guards formula</b></div>
+              <span class="physics-proof-arrow">→</span>
+              <div class="physics-proof-node good"><small>CONSEQUENCE</small><b>✅ Formula safe</b></div>
+            </div>
+
+            <div class="physics-proof-row changed">
+              <span class="physics-round-tag">ROUND 2</span>
+              <div class="physics-proof-node"><small>INPUT</small><b>💵 Money added</b></div>
+              <span class="physics-proof-arrow">→</span>
+              <div class="physics-proof-node rule"><small>PERSONALITY RULE</small><code>MR. KRABS → money_priority &gt; formula_priority</code></div>
+              <span class="physics-proof-arrow">→</span>
+              <div class="physics-proof-node"><small>ACTION</small><b>Leaves formula</b></div>
+              <span class="physics-proof-arrow">→</span>
+              <div class="physics-proof-node bad"><small>CONSEQUENCE</small><b>❌ Plankton steals it</b></div>
+            </div>
+          </section>
+
+          <section class="determinism-proof" aria-label="Determinism proof">
+            <div class="determinism-head">
+              <div>
+                <span class="panel-kicker">PROVE DETERMINISM</span>
+                <h3>Same setup → same ordered trace.</h3>
+              </div>
+              <span id="determinismStatus" class="determinism-status baseline">BASELINE CAPTURED</span>
+            </div>
+
+            <div class="determinism-fingerprints">
+              <div>
+                <small>SETUP FINGERPRINT</small>
+                <code id="determinismSetupHash">—</code>
+              </div>
+              <span aria-hidden="true">→</span>
+              <div>
+                <small>ACTION TRACE</small>
+                <code id="determinismTraceHash">—</code>
+              </div>
+              <span aria-hidden="true">→</span>
+              <div>
+                <small>OUTCOME</small>
+                <b id="determinismOutcome">✅ FORMULA SAFE</b>
+              </div>
+            </div>
+
+            <p id="determinismMessage" class="determinism-message">
+              Run the exact same input again. If the ordered action trace matches, the same world state produced the same episode.
+            </p>
+
+            <div class="determinism-actions">
+              <button id="btnRunSameSetup" class="btn btn-light">↻ RUN SAME SETUP AGAIN</button>
+              <button id="btnChangeOneVariable" class="btn btn-primary">🦋 CHANGE ONE VARIABLE</button>
+            </div>
+          </section>
+
+          <div class="compare-actions">
+            <button id="btnReplayJudge" class="mode-link compare-link">Replay full demo</button>
+            <span aria-hidden="true">·</span>
+            <button id="btnOpenDirectorFromCompare" class="mode-link compare-link">Try Director Mode</button>
+            <span aria-hidden="true">·</span>
+            <button id="btnCompareHome" class="mode-link compare-link">Home</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="conchPanel" class="conch-panel" hidden>
+        <div class="conch-shell">
+          <span class="panel-kicker">MAGIC CONCH EXPERIMENT</span>
+          <h2>ASK. THEN LET THE SETUP DECIDE.</h2>
+          <p>The answer is deterministic: the same scene + cast + props always produces the same Conch response.</p>
+          <div class="conch-question-row">
+            <input id="conchQuestion" type="text" maxlength="100" placeholder="Should we trust Plankton?" />
+            <button id="btnAskConch" class="btn btn-primary">🐚 ASK</button>
+          </div>
+          <div id="conchAnswer" class="conch-answer">The Magic Conch is listening…</div>
+        </div>
+      </section>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
