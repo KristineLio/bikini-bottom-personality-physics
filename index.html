@@ -201,6 +201,18 @@
             <div id="sceneFocus" class="scene-focus" aria-hidden="true"></div>
             <div id="consequenceFlash" class="consequence-flash" aria-hidden="true"></div>
 
+            <div id="filmFinale" class="film-finale" aria-live="polite" aria-hidden="true">
+              <small>THE EXPERIMENT</small>
+              <strong>SAME PERSONALITIES.</strong>
+              <span>ONE NEW VARIABLE.</span>
+              <em>DIFFERENT EPISODE.</em>
+              <div class="film-finale-outcomes">
+                <b>ROUND 1 · ✅ SAFE</b>
+                <i aria-hidden="true">→</i>
+                <b>ROUND 2 · ❌ STOLEN</b>
+              </div>
+            </div>
+
             <div id="judgeOverlay" class="judge-overlay" aria-live="polite"></div>
             <div id="butterflyFx" class="butterfly-fx">🦋</div>
             <div id="changeBadge" class="change-badge"></div>
@@ -233,10 +245,17 @@
             <div id="stageProps" class="stage-objects"></div>
           </div>
 
-          <div id="judgeProgress" class="judge-progress" hidden>
+          <div id="judgeProgress" class="judge-progress judge-film-progress" hidden>
+            <div id="judgeFilmStepper" class="judge-film-stepper" aria-label="Demo progress">
+              <span data-film-step="setup">SETUP</span><i>→</i>
+              <span data-film-step="round1">ROUND 1</span><i>→</i>
+              <span data-film-step="variable">+1 VARIABLE</span><i>→</i>
+              <span data-film-step="round2">ROUND 2</span><i>→</i>
+              <span data-film-step="proof">PROOF</span>
+            </div>
             <div class="judge-progress-head">
-              <b id="judgeRoundLabel">ROUND 1</b>
-              <span id="judgeProgressText">Original setup</span>
+              <b id="judgeRoundLabel">SETUP</b>
+              <span id="judgeProgressText">Same setup = same outcome</span>
             </div>
             <div class="judge-progress-track"><i id="judgeProgressFill"></i></div>
           </div>
@@ -310,62 +329,15 @@
         </div>
       </section>
 
-      <section id="compareOverlay" class="compare-overlay" hidden aria-live="polite">
-        <div class="compare-card">
-          <span class="panel-kicker">BUTTERFLY EFFECT</span>
-          <h2>ONE SMALL CHANGE.<br><em>A DIFFERENT EPISODE.</em></h2>
-
-          <div class="change-callout">
-            <span>🦋 CHANGE ONE THING</span>
-            <b>+ 💵 MONEY</b>
-            <small>Same characters. Same scene. Same starting positions.</small>
-          </div>
-
-          <div class="comparison-grid">
-            <article>
-              <span>ROUND 1</span>
-              <h3 id="roundOneOutcome">FORMULA SAFE</h3>
-              <ol id="roundOneEvents"></ol>
-            </article>
-            <article class="branch-changed">
-              <span>ROUND 2 · + MONEY</span>
-              <h3 id="roundTwoOutcome">FORMULA STOLEN</h3>
-              <ol id="roundTwoEvents"></ol>
-            </article>
-          </div>
-
-          <p class="compare-explainer">Characters weren’t given a new script. <strong>Their personalities reacted to the new situation.</strong></p>
-
-          <section class="physics-proof" aria-label="Decision physics comparison">
-            <div class="physics-proof-head">
-              <span class="panel-kicker">EXPLAIN THE PHYSICS</span>
-              <h3>Input → personality rule → action → consequence</h3>
-            </div>
-
-            <div class="physics-proof-row">
-              <span class="physics-round-tag">ROUND 1</span>
-              <div class="physics-proof-node"><small>INPUT</small><b>📜 Formula visible</b></div>
-              <span class="physics-proof-arrow">→</span>
-              <div class="physics-proof-node rule"><small>PERSONALITY RULE</small><code>SPONGEBOB → protect = HIGH</code></div>
-              <span class="physics-proof-arrow">→</span>
-              <div class="physics-proof-node"><small>ACTION</small><b>Guards formula</b></div>
-              <span class="physics-proof-arrow">→</span>
-              <div class="physics-proof-node good"><small>CONSEQUENCE</small><b>✅ Formula safe</b></div>
-            </div>
-
-            <div class="physics-proof-row changed">
-              <span class="physics-round-tag">ROUND 2</span>
-              <div class="physics-proof-node"><small>INPUT</small><b>💵 Money added</b></div>
-              <span class="physics-proof-arrow">→</span>
-              <div class="physics-proof-node rule"><small>PERSONALITY RULE</small><code>MR. KRABS → money_priority &gt; formula_priority</code></div>
-              <span class="physics-proof-arrow">→</span>
-              <div class="physics-proof-node"><small>ACTION</small><b>Leaves formula</b></div>
-              <span class="physics-proof-arrow">→</span>
-              <div class="physics-proof-node bad"><small>CONSEQUENCE</small><b>❌ Plankton steals it</b></div>
-            </div>
+      <section id="compareOverlay" class="compare-overlay post-film-overlay" hidden aria-live="polite">
+        <div class="compare-card post-film-card">
+          <section class="post-film-hero">
+            <span class="panel-kicker">20-SECOND EXPERIMENT COMPLETE</span>
+            <h2>SAME PERSONALITIES.<br><span>ONE NEW VARIABLE.</span><br><em>DIFFERENT EPISODE.</em></h2>
+            <p>Now verify the claim yourself instead of taking the animation on trust.</p>
           </section>
 
-          <section class="determinism-proof" aria-label="Determinism proof">
+          <section class="determinism-proof determinism-proof-primary" aria-label="Determinism proof">
             <div class="determinism-head">
               <div>
                 <span class="panel-kicker">PROVE DETERMINISM</span>
@@ -401,8 +373,61 @@
             </div>
           </section>
 
+          <details class="post-film-details">
+            <summary>See exactly why the episode changed</summary>
+            <div class="change-callout">
+              <span>🦋 ONLY ONE INPUT CHANGED</span>
+              <b>+ 💵 MONEY</b>
+              <small>Same characters. Same scene. Same starting positions.</small>
+            </div>
+
+            <div class="comparison-grid">
+              <article>
+                <span>ROUND 1</span>
+                <h3 id="roundOneOutcome">FORMULA SAFE</h3>
+                <ol id="roundOneEvents"></ol>
+              </article>
+              <article class="branch-changed">
+                <span>ROUND 2 · + MONEY</span>
+                <h3 id="roundTwoOutcome">FORMULA STOLEN</h3>
+                <ol id="roundTwoEvents"></ol>
+              </article>
+            </div>
+
+            <p class="compare-explainer">Characters weren’t given a new script. <strong>Their personalities reacted to the new situation.</strong></p>
+
+            <section class="physics-proof" aria-label="Decision physics comparison">
+              <div class="physics-proof-head">
+                <span class="panel-kicker">PERSONALITY X-RAY</span>
+                <h3>Input → personality rule → action → consequence</h3>
+              </div>
+
+              <div class="physics-proof-row">
+                <span class="physics-round-tag">ROUND 1</span>
+                <div class="physics-proof-node"><small>INPUT</small><b>📜 Formula visible</b></div>
+                <span class="physics-proof-arrow">→</span>
+                <div class="physics-proof-node rule"><small>PERSONALITY RULE</small><code>SPONGEBOB → protect = HIGH</code></div>
+                <span class="physics-proof-arrow">→</span>
+                <div class="physics-proof-node"><small>ACTION</small><b>Guards formula</b></div>
+                <span class="physics-proof-arrow">→</span>
+                <div class="physics-proof-node good"><small>CONSEQUENCE</small><b>✅ Formula safe</b></div>
+              </div>
+
+              <div class="physics-proof-row changed">
+                <span class="physics-round-tag">ROUND 2</span>
+                <div class="physics-proof-node"><small>INPUT</small><b>💵 Money added</b></div>
+                <span class="physics-proof-arrow">→</span>
+                <div class="physics-proof-node rule"><small>PERSONALITY RULE</small><code>MR. KRABS → money_priority &gt; formula_priority</code></div>
+                <span class="physics-proof-arrow">→</span>
+                <div class="physics-proof-node"><small>ACTION</small><b>Leaves formula</b></div>
+                <span class="physics-proof-arrow">→</span>
+                <div class="physics-proof-node bad"><small>CONSEQUENCE</small><b>❌ Plankton steals it</b></div>
+              </div>
+            </section>
+          </details>
+
           <div class="compare-actions">
-            <button id="btnReplayJudge" class="mode-link compare-link">Replay full demo</button>
+            <button id="btnReplayJudge" class="mode-link compare-link">Replay 20-second film</button>
             <span aria-hidden="true">·</span>
             <button id="btnOpenDirectorFromCompare" class="mode-link compare-link">Try Director Mode</button>
             <span aria-hidden="true">·</span>
