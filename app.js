@@ -1139,6 +1139,8 @@
       if (event.key === "Enter") askConch();
     });
 
+    $("#btnRunSameSetup").addEventListener("click", () => playVerificationScenario("baseline"));
+    $("#btnChangeOneVariable").addEventListener("click", () => playVerificationScenario("changed"));
     $("#btnReplayJudge").addEventListener("click", openJudge);
     $("#btnOpenDirectorFromCompare").addEventListener("click", () => openDirector(false));
     $("#btnCompareHome").addEventListener("click", goHome);
