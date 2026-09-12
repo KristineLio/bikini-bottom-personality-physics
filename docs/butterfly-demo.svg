@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+<title id="title">Personality Physics butterfly-effect demo</title>
+<desc id="desc">Animated storyboard: the same characters protect the formula, then adding money changes the chain and lets Plankton steal it.</desc>
+<defs>
+  <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#06243d"/><stop offset="1" stop-color="#0b6f9c"/></linearGradient>
+  <filter id="shadow"><feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#00111d" flood-opacity=".3"/></filter>
+  <style>
+    text{font-family:Arial,sans-serif}
+    .frame{opacity:0}
+    .f1{animation:show1 10s infinite}.f2{animation:show2 10s infinite}.f3{animation:show3 10s infinite}.f4{animation:show4 10s infinite}.f5{animation:show5 10s infinite}
+    @keyframes show1{0%,16%{opacity:1}20%,100%{opacity:0}}
+    @keyframes show2{0%,18%{opacity:0}22%,36%{opacity:1}40%,100%{opacity:0}}
+    @keyframes show3{0%,38%{opacity:0}42%,56%{opacity:1}60%,100%{opacity:0}}
+    @keyframes show4{0%,58%{opacity:0}62%,78%{opacity:1}82%,100%{opacity:0}}
+    @keyframes show5{0%,80%{opacity:0}84%,98%{opacity:1}100%{opacity:0}}
+    .token{stroke:#082b45;stroke-width:5}
+    .label{font-size:17px;font-weight:800;fill:#082b45;text-anchor:middle}
+    .headline{font-size:42px;font-weight:900;text-anchor:middle}
+    .sub{font-size:20px;font-weight:700;text-anchor:middle}
+  </style>
+</defs>
+<rect width="1200" height="675" rx="34" fill="url(#bg)"/>
+<text x="64" y="64" font-size="24" font-weight="900" fill="#bfeeff" letter-spacing="2">PERSONALITY PHYSICS</text>
+<text x="64" y="94" font-size="17" font-weight="700" fill="#eefaff" opacity=".8">20-second butterfly-effect experiment</text>
+
+<g class="frame f1">
+  <text class="headline" x="600" y="190" fill="#ffe96b">SAME SETUP = SAME OUTCOME</text>
+  <text class="sub" x="600" y="235" fill="#fff">The characters keep the same motivations.</text>
+  <g filter="url(#shadow)">
+    <circle class="token" cx="220" cy="430" r="68" fill="#b3e46b"/><text class="label" x="220" y="438">PLANKTON</text>
+    <circle class="token" cx="455" cy="430" r="68" fill="#ffe86b"/><text class="label" x="455" y="438">SPONGEBOB</text>
+    <circle class="token" cx="740" cy="430" r="68" fill="#f16962"/><text class="label" x="740" y="438">KRABS</text>
+    <circle class="token" cx="970" cy="430" r="68" fill="#ffb0c9"/><text class="label" x="970" y="438">PATRICK</text>
+    <rect x="535" y="310" width="130" height="72" rx="16" fill="#fff9dd" stroke="#082b45" stroke-width="5"/><text class="label" x="600" y="353">FORMULA</text>
+  </g>
+</g>
+
+<g class="frame f2">
+  <text class="headline" x="600" y="165" fill="#d9f8e7">ROUND 1 · FORMULA SAFE</text>
+  <text class="sub" x="600" y="208" fill="#fff">Plankton targets it. SpongeBob and Krabs keep defenders active.</text>
+  <circle class="token" cx="220" cy="430" r="68" fill="#b3e46b"/><text class="label" x="220" y="438">PLANKTON</text>
+  <circle class="token" cx="455" cy="430" r="68" fill="#ffe86b"/><text class="label" x="455" y="438">SPONGEBOB</text>
+  <circle class="token" cx="900" cy="430" r="68" fill="#f16962"/><text class="label" x="900" y="438">KRABS</text>
+  <rect x="570" y="350" width="130" height="72" rx="16" fill="#fff9dd" stroke="#082b45" stroke-width="5"/><text class="label" x="635" y="393">FORMULA</text>
+  <path d="M288 416L560 385M520 416L573 392M832 416L700 392" stroke="#8ae0a9" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <text class="sub" x="635" y="515" fill="#d9f8e7">2 ACTIVE DEFENDERS → SAFE</text>
+</g>
+
+<g class="frame f3">
+  <text class="headline" x="600" y="180" fill="#fff">CHANGE ONE THING</text>
+  <text class="headline" x="600" y="250" fill="#ffe96b">+ MONEY</text>
+  <rect x="440" y="315" width="320" height="170" rx="28" fill="#fff4a3" stroke="#082b45" stroke-width="6" filter="url(#shadow)"/>
+  <text x="600" y="365" font-size="21" font-weight="900" text-anchor="middle" fill="#082b45">NEW INPUT</text>
+  <text x="600" y="425" font-size="38" font-weight="900" text-anchor="middle" fill="#082b45">$  MONEY</text>
+  <text class="sub" x="600" y="555" fill="#eefaff">Same characters · same scene · same starting positions</text>
+</g>
+
+<g class="frame f4">
+  <text class="headline" x="600" y="150" fill="#fff">ROUND 2 · SAME WORLD + MONEY</text>
+  <circle class="token" cx="175" cy="450" r="64" fill="#b3e46b"/><text class="label" x="175" y="458">PLANKTON</text>
+  <circle class="token" cx="405" cy="450" r="64" fill="#ffe86b"/><text class="label" x="405" y="458">SPONGEBOB</text>
+  <circle class="token" cx="805" cy="450" r="64" fill="#f16962"/><text class="label" x="805" y="458">KRABS</text>
+  <circle class="token" cx="1010" cy="450" r="64" fill="#ffb0c9"/><text class="label" x="1010" y="458">PATRICK</text>
+  <rect x="505" y="330" width="130" height="72" rx="16" fill="#fff9dd" stroke="#082b45" stroke-width="5"/><text class="label" x="570" y="373">FORMULA</text>
+  <rect x="820" y="260" width="150" height="78" rx="16" fill="#fff4a3" stroke="#082b45" stroke-width="5"/><text class="label" x="895" y="307">$ MONEY</text>
+  <path d="M845 405L885 338M975 405L920 338M455 405L805 315" stroke="#ffe96b" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <path d="M239 428L500 372" stroke="#ff9a67" stroke-width="11" fill="none" stroke-linecap="round"/>
+  <text class="sub" x="600" y="565" fill="#ffe4cf">DEFENDERS LEAVE → PLANKTON GETS THE OPENING</text>
+</g>
+
+<g class="frame f5">
+  <text class="headline" x="600" y="200" fill="#fff">SAME PERSONALITIES.</text>
+  <text class="headline" x="600" y="275" fill="#ffe96b">ONE NEW VARIABLE.</text>
+  <text class="headline" x="600" y="350" fill="#ff9a67">DIFFERENT EPISODE.</text>
+  <rect x="230" y="435" width="260" height="82" rx="18" fill="#d9f8e7"/><text x="360" y="485" font-size="22" font-weight="900" text-anchor="middle" fill="#145438">ROUND 1 · SAFE</text>
+  <text x="600" y="486" font-size="36" font-weight="900" text-anchor="middle" fill="#ffe96b">→</text>
+  <rect x="710" y="435" width="260" height="82" rx="18" fill="#ffe1df"/><text x="840" y="485" font-size="22" font-weight="900" text-anchor="middle" fill="#7f302d">ROUND 2 · STOLEN</text>
+</g>
+</svg>
