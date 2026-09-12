@@ -1542,76 +1542,141 @@
 
   async function openJudge() {
     const token = ++state.runToken;
+    const filmStartedAt = Date.now();
+
     showScreen("play");
     setModeChrome("judge");
     setScene("krusty");
     els.judgeProgress.hidden = false;
     els.judgeProgressFill.style.width = "0%";
     els.compareOverlay.hidden = true;
+    resetJudgeFilmVisuals();
 
+    // 0–2s · SETUP
     setupJudgeRound(false);
     const round1 = resolveJudgeScenario();
     state.judgeBaselineScenario = round1;
     state.determinismBaseline = captureJudgeFingerprint(round1);
 
     setChaos(8);
-    els.judgeRoundLabel.textContent = "ROUND 1";
-    els.judgeProgressText.textContent = "Original setup";
-    overlay("ROUND 1\nORIGINAL SETUP");
-    await sleep(900);
+    setJudgeFilmStep("setup");
+    els.judgeRoundLabel.textContent = "SETUP";
+    els.judgeProgressText.textContent = "Same setup = same outcome";
+    els.judgeProgressFill.style.width = "5%";
+    overlay("SAME SETUP\n= SAME OUTCOME");
+    await sleep(1650);
     if (token !== state.runToken) return;
     overlay("", false);
 
+    // 2–7s · ROUND 1
+    setJudgeFilmStep("round1");
+    els.judgeRoundLabel.textContent = "ROUND 1";
+    els.judgeProgressText.textContent = "Original setup";
+    const round1Film = [
+      { showRule:true,  progress:15 },
+      { showRule:true,  progress:24 },
+      { showRule:false, progress:33 },
+      { showRule:false, progress:42, reactionHold:330 }
+    ];
+
     for (let i = 0; i < round1.events.length; i++) {
-      const ok = await judgeEvent(token, round1.events[i], 8 + (i + 1) * 9);
+      const ok = await judgeFilmEvent(token, round1.events[i], round1Film[i]?.progress ?? (15 + i * 9), round1Film[i] || {});
       if (!ok) return;
     }
 
-    hideNarrator();
-    hidePhysics();
-    showBanner("ROUND 1 OUTCOME: " + round1.outcome);
-    els.judgeProgressFill.style.width = "48%";
-    await sleep(950);
+    showBanner("ROUND 1 · " + round1.outcome);
+    els.judgeProgressFill.style.width = "46%";
+    await sleep(620);
     if (token !== state.runToken) return;
     hideBanner();
 
-    overlay("🦋 CHANGE ONE THING");
-    els.butterflyFx.classList.add("is-on");
-    els.changeBadge.innerHTML = "ADD<br><span style=\"font-size:34px\">💵</span> MONEY";
-    els.changeBadge.classList.add("is-on");
-    await sleep(950);
-    if (token !== state.runToken) return;
+    // 7–9s · Freeze the experiment and reveal exactly one new input.
+    setJudgeFilmStep("variable");
+    els.judgeRoundLabel.textContent = "+1 VARIABLE";
+    els.judgeProgressText.textContent = "Everything else stays the same";
+    els.judgeProgressFill.style.width = "50%";
 
     setupJudgeRound(true);
     const round2 = resolveJudgeScenario();
     state.judgeChangedScenario = round2;
+
+    setVariableFreeze(true);
+    els.butterflyFx.classList.add("is-on");
+    els.changeBadge.innerHTML = "🦋 CHANGE ONE THING<br><span style=\"font-size:34px\">💵</span><br>+ MONEY";
+    els.changeBadge.classList.add("is-on");
+    overlay("ONE NEW VARIABLE");
+    await sleep(1700);
+    if (token !== state.runToken) return;
+
+    overlay("", false);
     els.changeBadge.classList.remove("is-on");
     els.butterflyFx.classList.remove("is-on");
-    overlay("", false);
+    setVariableFreeze(false);
+
+    // 9–15/17s · ROUND 2
+    setJudgeFilmStep("round2");
     els.judgeRoundLabel.textContent = "ROUND 2";
-    els.judgeProgressText.textContent = "Same setup + 💵 MONEY";
-    els.judgeProgressFill.style.width = "55%";
-    showBanner("SAME CHARACTERS · SAME SCENE · + 💵 MONEY");
-    await sleep(850);
+    els.judgeProgressText.textContent = "Same world + 💵 MONEY";
+    els.judgeProgressFill.style.width = "54%";
+    showBanner("SAME WORLD · + 💵 MONEY");
+    await sleep(480);
     if (token !== state.runToken) return;
     hideBanner();
 
+    const round2Film = [
+      { showRule:false, progress:64, reactionHold:400 },
+      { showRule:true,  progress:74, reactionHold:430 },
+      { showRule:false, progress:83, reactionHold:400 },
+      {
+        showRule:true,
+        progress:94,
+        reactionHold:410,
+        moveDuration:350,
+        escapeAnticipation:110,
+        escapeDuration:950,
+        escapeHold:300
+      }
+    ];
+
     for (let i = 0; i < round2.events.length; i++) {
-      const ok = await judgeEvent(token, round2.events[i], 61 + (i + 1) * 9);
+      if (i === round2.events.length - 1) {
+        showBanner("NO DEFENDERS LEFT");
+        await sleep(540);
+        if (token !== state.runToken) return;
+        hideBanner();
+      }
+
+      const ok = await judgeFilmEvent(token, round2.events[i], round2Film[i]?.progress ?? (64 + i * 10), round2Film[i] || {});
       if (!ok) return;
     }
 
-    hideNarrator();
-    hidePhysics();
-    showBanner("ROUND 2 OUTCOME: " + round2.outcome);
-    els.judgeProgressFill.style.width = "100%";
-    await sleep(1000);
+    showBanner("ROUND 2 · " + round2.outcome);
+    els.judgeProgressFill.style.width = "97%";
+    await sleep(620);
     if (token !== state.runToken) return;
     hideBanner();
 
+    // 17–20s · FINAL FRAME
+    setJudgeFilmStep("proof");
+    els.judgeRoundLabel.textContent = "PROOF";
+    els.judgeProgressText.textContent = "Same personalities. One new variable.";
+    els.judgeProgressFill.style.width = "100%";
+    showFilmFinale(true);
+
+    // Keep the total experience close to 20 seconds even if the browser
+    // renders individual animation frames slightly faster or slower.
+    const elapsed = Date.now() - filmStartedAt;
+    const finaleHold = clamp(19800 - elapsed, 2400, 4200);
+    await sleep(finaleHold);
+    if (token !== state.runToken) return;
+
+    showFilmFinale(false);
     fillJudgeComparison();
     setDeterminismPanel("baseline", state.determinismBaseline);
+
+    // Land directly on the proof instead of a wall of explanation.
     els.compareOverlay.hidden = false;
+    els.compareOverlay.scrollTop = 0;
   }
 
   async function openExample() {
