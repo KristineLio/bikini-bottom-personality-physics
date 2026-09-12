@@ -1572,15 +1572,23 @@
     setJudgeFilmStep("round1");
     els.judgeRoundLabel.textContent = "ROUND 1";
     els.judgeProgressText.textContent = "Original setup";
+    // Patrick remains in the setup, but his neutral “I’ll just watch”
+    // event is intentionally not cut into the film. The proof trace still
+    // records it; the cinematic cut only shows causal actions.
+    const round1VisibleEvents = round1.events.filter(event => !(event.actor === "patrick" && !event.target));
     const round1Film = [
-      { showRule:true,  progress:15 },
-      { showRule:true,  progress:24 },
-      { showRule:false, progress:33 },
-      { showRule:false, progress:42, reactionHold:330 }
+      { showRule:true,  progress:17 },
+      { showRule:true,  progress:29 },
+      { showRule:false, progress:42 }
     ];
 
-    for (let i = 0; i < round1.events.length; i++) {
-      const ok = await judgeFilmEvent(token, round1.events[i], round1Film[i]?.progress ?? (15 + i * 9), round1Film[i] || {});
+    for (let i = 0; i < round1VisibleEvents.length; i++) {
+      const ok = await judgeFilmEvent(
+        token,
+        round1VisibleEvents[i],
+        round1Film[i]?.progress ?? (17 + i * 12),
+        round1Film[i] || {}
+      );
       if (!ok) return;
     }
 
@@ -1760,6 +1768,7 @@
     hideBanner();
     hideChainBadge();
     hidePhysics();
+    resetJudgeFilmVisuals();
     showScreen("home");
     state.mode = "home";
   }
