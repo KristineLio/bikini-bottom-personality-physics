@@ -36,12 +36,22 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Build static portfolio artifact
+        run: |
+          mkdir -p dist/assets/characters dist/docs
+          cp index.html styles.css app.js engine.js personalities.js world.js scenarios.js ui.js animations.js dist/
+          cp assets/characters/*.svg dist/assets/characters/
+          cp docs/butterfly-demo.svg dist/docs/
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
+
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: dist
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
