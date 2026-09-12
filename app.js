@@ -324,6 +324,48 @@
     return [state.scene, actors, props, extra].join("::");
   }
 
+  function clearVisualFocus() {
+    if (!els.stage) return;
+    els.stage.classList.remove("has-active-character", "is-payoff");
+    els.stage.removeAttribute("data-visual-phase");
+    $(".actor", els.stage).forEach(el => el.classList.remove("is-active-character", "focus", "is-payoff-escape"));
+    $(".prop-object", els.stage).forEach(el => el.classList.remove("is-active-target"));
+    if (els.sceneFocus) {
+      els.sceneFocus.style.removeProperty("--focus-x");
+      els.sceneFocus.style.removeProperty("--focus-y");
+    }
+  }
+
+  function focusVisualEvent(actorKey, targetKey, phase = "stimulus") {
+    clearVisualFocus();
+    const actor = actorByKey(actorKey);
+    const target = targetKey ? propByKey(targetKey) : null;
+    const actorEl = actorElement(actorKey);
+    const targetEl = targetKey ? propElement(targetKey) : null;
+
+    if (actorEl) actorEl.classList.add("is-active-character", "focus");
+    if (targetEl) targetEl.classList.add("is-active-target");
+
+    if (actorEl) els.stage.classList.add("has-active-character");
+    els.stage.dataset.visualPhase = phase;
+
+    const focusX = target ? ((actor?.x || 50) + target.x) / 2 : (actor?.x || 50);
+    const focusY = target ? ((actor?.y || 55) + target.y) / 2 : (actor?.y || 55);
+    if (els.sceneFocus) {
+      els.sceneFocus.style.setProperty("--focus-x", focusX + "%");
+      els.sceneFocus.style.setProperty("--focus-y", focusY + "%");
+    }
+  }
+
+  function flashConsequence(kind = "normal") {
+    if (!els.consequenceFlash) return;
+    els.consequenceFlash.dataset.kind = kind;
+    els.consequenceFlash.classList.remove("is-on");
+    void els.consequenceFlash.offsetWidth;
+    els.consequenceFlash.classList.add("is-on");
+    setTimeout(() => els.consequenceFlash?.classList.remove("is-on"), 520);
+  }
+
   function actorElement(key) {
     return $('.actor[data-key="' + key + '"]', els.stage);
   }
@@ -385,6 +427,29 @@
     el.classList.remove("anticipate");
     await moveObject("actor", key, x, y, duration);
   }
+
+  async function dramaticEscapeWithProp(actorKey) {
+    const actor = actorByKey(actorKey);
+    const el = actorElement(actorKey);
+    if (!actor || !el) return;
+
+    els.stage.classList.add("is-payoff");
+    el.classList.add("is-payoff-escape", "is-active-character");
+    flashConsequence("payoff");
+    await sleep(120);
+
+    const escapeX = actor.x > 50 ? 91 : 9;
+    const escapeY = clamp(actor.y - 8, 28, 78);
+    await walkActorTo(actorKey, escapeX, escapeY, 760);
+
+    react(actorKey, actorKey === "plankton" ? "Mine!" : "Got it!", "PAYOFF");
+    await sleep(280);
+    flashConsequence("payoff");
+
+    el.classList.remove("is-payoff-escape");
+    setTimeout(() => els.stage?.classList.remove("is-payoff"), 500);
+  }
+
 
   function setCarry(actorKey, propKey) {
     const actor = actorByKey(actorKey);
