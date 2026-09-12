@@ -116,6 +116,7 @@
     chainBadge: $("#chainBadge"),
     sceneFocus: $("#sceneFocus"),
     consequenceFlash: $("#consequenceFlash"),
+    filmFinale: $("#filmFinale"),
     physicsLayer: $("#physicsLayer"),
     physicsActor: $("#physicsActor"),
     physicsRule: $("#physicsRule"),
@@ -124,6 +125,7 @@
     physicsAction: $("#physicsAction"),
     physicsConsequence: $("#physicsConsequence"),
     judgeProgress: $("#judgeProgress"),
+    judgeFilmStepper: $("#judgeFilmStepper"),
     judgeRoundLabel: $("#judgeRoundLabel"),
     judgeProgressText: $("#judgeProgressText"),
     judgeProgressFill: $("#judgeProgressFill"),
@@ -177,6 +179,7 @@
     hideChainBadge();
     hidePhysics();
     clearVisualFocus();
+    resetJudgeFilmVisuals();
     setChaos(8);
   }
 
@@ -428,7 +431,7 @@
     await moveObject("actor", key, x, y, duration);
   }
 
-  async function dramaticEscapeWithProp(actorKey) {
+  async function dramaticEscapeWithProp(actorKey, options = {}) {
     const actor = actorByKey(actorKey);
     const el = actorElement(actorKey);
     if (!actor || !el) return;
@@ -436,20 +439,19 @@
     els.stage.classList.add("is-payoff");
     el.classList.add("is-payoff-escape", "is-active-character");
     flashConsequence("payoff");
-    await sleep(120);
+    await sleep(options.escapeAnticipation ?? 120);
 
     const escapeX = actor.x > 50 ? 91 : 9;
     const escapeY = clamp(actor.y - 8, 28, 78);
-    await walkActorTo(actorKey, escapeX, escapeY, 760);
+    await walkActorTo(actorKey, escapeX, escapeY, options.escapeDuration ?? 760);
 
     react(actorKey, actorKey === "plankton" ? "Mine!" : "Got it!", "PAYOFF");
-    await sleep(280);
+    await sleep(options.escapeHold ?? 280);
     flashConsequence("payoff");
 
     el.classList.remove("is-payoff-escape");
     setTimeout(() => els.stage?.classList.remove("is-payoff"), 500);
   }
-
 
   function setCarry(actorKey, propKey) {
     const actor = actorByKey(actorKey);
@@ -628,19 +630,26 @@
 
     const target = event.target && propByKey(event.target);
     const actor = actorByKey(event.actor);
+    const showRule = options.showRule !== false;
 
-    // 1) Stimulus appears and the relevant character/target become the visual focus.
+    // 1) Stimulus.
     focusVisualEvent(event.actor, event.target || null, "stimulus");
     await sleep(options.stimulusPause ?? 150);
     if (token !== state.runToken) return false;
 
-    // 2) Reveal the winning personality rule as a short X-ray, not a dashboard.
+    // 2) Winning rule. Judge film can flash this briefly instead of
+    // leaving a technical panel over the animation.
     els.stage.dataset.visualPhase = "rule";
-    showPhysics(event);
-    await sleep(options.rulePause ?? 190);
-    if (token !== state.runToken) return false;
+    if (showRule) {
+      showPhysics(event);
+      await sleep(options.rulePause ?? 190);
+      if (token !== state.runToken) return false;
+      if (options.briefRule) hidePhysics();
+    } else {
+      hidePhysics();
+    }
 
-    // 3) Movement follows the selected target.
+    // 3) Movement.
     els.stage.dataset.visualPhase = "movement";
     if (target && actor) {
       const side = actor.x <= target.x ? -8 : 8;
@@ -653,7 +662,7 @@
     }
     if (token !== state.runToken) return false;
 
-    // 4) Character reaction.
+    // 4) Reaction.
     els.stage.dataset.visualPhase = "reaction";
     react(event.actor, event.text, event.trait);
     showNarrator(
@@ -673,7 +682,7 @@
     await sleep(options.reactionHold ?? 760);
     if (token !== state.runToken) return false;
 
-    // 5) Consequence changes the world state.
+    // 5) Consequence.
     els.stage.dataset.visualPhase = "consequence";
     if (event.grabs) {
       markPropTaken(event.grabs, true, event.actor);
@@ -682,7 +691,7 @@
 
     if (event.takes) {
       markPropTaken(event.takes, true, event.actor);
-      await dramaticEscapeWithProp(event.actor);
+      await dramaticEscapeWithProp(event.actor, options);
     } else {
       flashConsequence("normal");
       await sleep(options.consequencePause ?? 180);
@@ -693,6 +702,55 @@
     hideNarrator();
     clearVisualFocus();
     return true;
+  }
+
+  const JUDGE_FILM_STEPS = ["setup", "round1", "variable", "round2", "proof"];
+
+  function setJudgeFilmStep(step) {
+    const activeIndex = JUDGE_FILM_STEPS.indexOf(step);
+    if (!els.judgeFilmStepper || activeIndex < 0) return;
+    $("[data-film-step]", els.judgeFilmStepper).forEach(node => {
+      const index = JUDGE_FILM_STEPS.indexOf(node.dataset.filmStep);
+      node.classList.toggle("is-active", index === activeIndex);
+      node.classList.toggle("is-done", index < activeIndex);
+    });
+  }
+
+  function setVariableFreeze(on) {
+    els.stage.classList.toggle("is-variable-freeze", on);
+    const money = propElement("money");
+    if (money) money.classList.toggle("is-new-variable", on);
+  }
+
+  function showFilmFinale(on = true) {
+    if (!els.filmFinale) return;
+    els.filmFinale.classList.toggle("is-on", on);
+    els.filmFinale.setAttribute("aria-hidden", on ? "false" : "true");
+  }
+
+  function resetJudgeFilmVisuals() {
+    if (!els.stage) return;
+    els.stage.classList.remove("is-variable-freeze");
+    $(".prop-object.is-new-variable", els.stage).forEach(el => el.classList.remove("is-new-variable"));
+    showFilmFinale(false);
+  }
+
+  async function judgeFilmEvent(token, event, progress, options = {}) {
+    return performVisualEvent(token, event, {
+      chaosMode:"set",
+      progress,
+      minX:8,
+      maxX:92,
+      minY:20,
+      maxY:90,
+      stimulusPause:70,
+      moveDuration:360,
+      reactionHold:390,
+      consequencePause:90,
+      briefRule:true,
+      rulePause:420,
+      ...options
+    });
   }
 
   function showChainBadge(step, total, label) {
@@ -1402,7 +1460,7 @@
     ].map(x => "<li>" + x + "</li>").join("");
   }
 
-  async function judgeEvent(token, event, progress) {
+  async function judgeEvent(token, event, progress, options = {}) {
     return performVisualEvent(token, event, {
       chaosMode:"set",
       progress,
@@ -1411,7 +1469,8 @@
       minY:20,
       maxY:90,
       moveDuration:550,
-      reactionHold:780
+      reactionHold:780,
+      ...options
     });
   }
 
