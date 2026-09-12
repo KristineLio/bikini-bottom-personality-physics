@@ -56,28 +56,22 @@
     street: "CONCH STREET"
   };
 
-  const JUDGE_SCENARIOS = {
-    baseline: {
-      includeMoney: false,
-      label: "ORIGINAL SETUP",
-      outcome: "✅ FORMULA SAFE",
-      events: [
-        { actor:"plankton", text:"Formula detected.", trait:"FORMULA-OBSESSED", why:"Plankton always targets the formula.", target:"formula", chaos:25 },
-        { actor:"spongebob", text:"Protect the formula!", trait:"LOYAL · PROTECTIVE", why:"SpongeBob reacts to protect what he cares about.", target:"formula", chaos:34 },
-        { actor:"mrkrabs", text:"Nobody touches me formula!", trait:"PROTECTIVE", why:"Mr. Krabs protects the restaurant.", target:"formula", chaos:38 },
-        { actor:"patrick", text:"I’ll just watch.", trait:"CURIOUS", why:"Nothing in this setup strongly tempts Patrick.", chaos:36 }
-      ]
+  const PERSONALITY_WEIGHTS = {
+    plankton: {
+      formula_obsession: 100,
+      opportunism: 92
     },
-    changed: {
-      includeMoney: true,
-      label: "SAME SETUP + 💵 MONEY",
-      outcome: "❌ FORMULA STOLEN",
-      events: [
-        { actor:"patrick", text:"Ooooh… money.", trait:"IMPULSIVE", why:"Money becomes Patrick’s strongest new stimulus.", target:"money", chaos:48 },
-        { actor:"mrkrabs", text:"MONEY?!", trait:"MONEY > EVERYTHING", why:"Mr. Krabs immediately prioritizes money.", target:"money", chaos:61, grabs:"money" },
-        { actor:"spongebob", text:"Mr. Krabs?", trait:"HELPFUL · DISTRACTIBLE", why:"SpongeBob follows the new commotion.", target:"money", chaos:70 },
-        { actor:"plankton", text:"Perfect distraction.", trait:"SCHEMING", why:"Plankton exploits the opening created by everyone else.", target:"formula", chaos:88, takes:"formula" }
-      ]
+    mrkrabs: {
+      money_priority: 100,
+      formula_priority: 76
+    },
+    spongebob: {
+      protect: 90,
+      follow_authority: 95
+    },
+    patrick: {
+      novelty_drive: 88,
+      impulse_control: 20
     }
   };
 
@@ -90,7 +84,9 @@
     runToken: 0,
     dragging: null,
     chaos: 8,
-    determinismBaseline: null
+    determinismBaseline: null,
+    judgeBaselineScenario: null,
+    judgeChangedScenario: null
   };
 
   const els = {
