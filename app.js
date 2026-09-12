@@ -1,5 +1,5 @@
 import { CHARACTERS, PROPS, SCENES } from "./personalities.js";
-import { clamp, actorByKey as worldActorByKey, propByKey as worldPropByKey, canonicalWorldSignature } from "./world.js";
+import { clamp, hashString, actorByKey as worldActorByKey, propByKey as worldPropByKey, canonicalWorldSignature } from "./world.js";
 import { resolve, traceSignature as engineTraceSignature, captureDeterminismProof } from "./engine.js";
 import { createJudgeWorld, createMotivationCollisionWorld, createExampleWorld } from "./scenarios.js";
 import { $, $$ } from "./ui.js";
@@ -771,20 +771,16 @@ import { sleep, transitionPosition } from "./animations.js";
     state.runToken++;
     showScreen("play");
     setModeChrome("director");
-    clearStage();
-    setScene("krusty");
 
-    // This button only places objects. The outcome is still resolved from
-    // personality priorities + geometry when ACTION is pressed.
-    addActor("plankton", 22, 58);
-    addActor("patrick", 46, 68);
-    addActor("squidward", 58, 78);
-    addActor("mrkrabs", 84, 61);
-
-    addProp("formula", 31, 50);
-    addProp("money", 72, 49);
-    addProp("clarinet", 58, 61);
-
+    // The scenario factory defines only initial inputs. The pure engine still
+    // determines every decision after ACTION is pressed.
+    const world = createMotivationCollisionWorld();
+    state.scene = world.scene;
+    state.actors = world.actors;
+    state.props = world.props;
+    renderStage();
+    setScene(world.scene);
+    hideResult();
     setChaos(22);
     showBanner("MOTIVATION COLLISION LOADED — PRESS ACTION");
     setTimeout(hideBanner, 1800);
@@ -1198,13 +1194,13 @@ import { sleep, transitionPosition } from "./animations.js";
     const token = ++state.runToken;
     showScreen("play");
     setModeChrome("example");
-    clearStage();
-    setScene("krusty");
-    addActor("plankton", 23, 62);
-    addActor("spongebob", 71, 62);
-    addActor("mrkrabs", 85, 76);
-    addProp("formula", 50, 53);
-    addProp("spatula", 69, 48);
+    const world = createExampleWorld();
+    state.scene = world.scene;
+    state.actors = world.actors;
+    state.props = world.props;
+    renderStage();
+    setScene(world.scene);
+    hideResult();
     setChaos(18);
 
     overlay("🎬 PLANKTON’S VERY BAD DAY");
