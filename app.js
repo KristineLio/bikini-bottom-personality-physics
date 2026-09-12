@@ -623,6 +623,78 @@
     els.narrator.classList.remove("is-on");
   }
 
+  async function performVisualEvent(token, event, options = {}) {
+    if (token !== state.runToken) return false;
+
+    const target = event.target && propByKey(event.target);
+    const actor = actorByKey(event.actor);
+
+    // 1) Stimulus appears and the relevant character/target become the visual focus.
+    focusVisualEvent(event.actor, event.target || null, "stimulus");
+    await sleep(options.stimulusPause ?? 150);
+    if (token !== state.runToken) return false;
+
+    // 2) Reveal the winning personality rule as a short X-ray, not a dashboard.
+    els.stage.dataset.visualPhase = "rule";
+    showPhysics(event);
+    await sleep(options.rulePause ?? 190);
+    if (token !== state.runToken) return false;
+
+    // 3) Movement follows the selected target.
+    els.stage.dataset.visualPhase = "movement";
+    if (target && actor) {
+      const side = actor.x <= target.x ? -8 : 8;
+      await walkActorTo(
+        event.actor,
+        clamp(target.x + side, options.minX ?? 7, options.maxX ?? 93),
+        clamp(target.y + 10, options.minY ?? 18, options.maxY ?? 90),
+        options.moveDuration ?? 540
+      );
+    }
+    if (token !== state.runToken) return false;
+
+    // 4) Character reaction.
+    els.stage.dataset.visualPhase = "reaction";
+    react(event.actor, event.text, event.trait);
+    showNarrator(
+      CHARACTERS[event.actor]?.name || "Narrator",
+      event.why || ("because " + (event.trait || "personality").toLowerCase() + ".")
+    );
+
+    if (options.progress != null && els.judgeProgressFill) {
+      els.judgeProgressFill.style.width = options.progress + "%";
+    }
+    if (options.chaosMode === "set") {
+      setChaos(event.chaos);
+    } else if (options.chaosMode === "add") {
+      setChaos(state.chaos + (event.chaos || 5));
+    }
+
+    await sleep(options.reactionHold ?? 760);
+    if (token !== state.runToken) return false;
+
+    // 5) Consequence changes the world state.
+    els.stage.dataset.visualPhase = "consequence";
+    if (event.grabs) {
+      markPropTaken(event.grabs, true, event.actor);
+      flashConsequence("grab");
+    }
+
+    if (event.takes) {
+      markPropTaken(event.takes, true, event.actor);
+      await dramaticEscapeWithProp(event.actor);
+    } else {
+      flashConsequence("normal");
+      await sleep(options.consequencePause ?? 180);
+    }
+
+    if (token !== state.runToken) return false;
+    hidePhysics();
+    hideNarrator();
+    clearVisualFocus();
+    return true;
+  }
+
   function showChainBadge(step, total, label) {
     if (!els.chainBadge) return;
     els.chainBadge.innerHTML = '<span>CHAIN ' + step + '/' + total + '</span><b>' + label + '</b>';
@@ -1101,30 +1173,12 @@
         showChainBadge(i + 1, result.events.length, event.chainLabel || "World state changed");
       }
 
-      showPhysics(event);
-
-      const target = event.target && propByKey(event.target);
-      const actor = actorByKey(event.actor);
-      if (target && actor) {
-        const side = actor.x <= target.x ? -8 : 8;
-        await walkActorTo(event.actor, clamp(target.x + side, 7, 93), clamp(target.y + 10, 18, 90), 520);
-      }
-
-      react(event.actor, event.text, event.trait);
-      showNarrator(
-        CHARACTERS[event.actor]?.name || "Narrator",
-        event.why || ("because " + event.trait.toLowerCase() + ".")
-      );
-
-      setChaos(state.chaos + (event.chaos || 5));
-      await sleep(result.isChainReaction ? 1120 : 1000);
-
-      if (event.grabs) markPropTaken(event.grabs, true, event.actor);
-      if (event.takes) {
-        markPropTaken(event.takes, true, event.actor);
-        const thief = actorByKey(event.actor);
-        if (thief) await walkActorTo(event.actor, clamp(thief.x - 22, 8, 92), clamp(thief.y + 6, 18, 90), 520);
-      }
+      const ok = await performVisualEvent(token, event, {
+        chaosMode:"add",
+        reactionHold:result.isChainReaction ? 820 : 720,
+        moveDuration:560
+      });
+      if (!ok) return;
     }
 
     if (token !== state.runToken) return;
@@ -1349,28 +1403,16 @@
   }
 
   async function judgeEvent(token, event, progress) {
-    if (token !== state.runToken) return false;
-    showPhysics(event);
-    if (event.target) {
-      const target = propByKey(event.target);
-      const actor = actorByKey(event.actor);
-      if (target && actor) {
-        const side = actor.x <= target.x ? -8 : 8;
-        await walkActorTo(event.actor, clamp(target.x + side, 8, 92), clamp(target.y + 10, 20, 90), 530);
-      }
-    }
-    react(event.actor, event.text, event.trait);
-    showNarrator(CHARACTERS[event.actor].name, event.why);
-    setChaos(event.chaos);
-    els.judgeProgressFill.style.width = progress + "%";
-    await sleep(1050);
-    if (event.grabs) markPropTaken(event.grabs, true, event.actor);
-    if (event.takes) {
-      markPropTaken(event.takes, true, event.actor);
-      const thief = actorByKey(event.actor);
-      if (thief) await walkActorTo(event.actor, clamp(thief.x - 22, 8, 92), clamp(thief.y + 6, 18, 90), 520);
-    }
-    return token === state.runToken;
+    return performVisualEvent(token, event, {
+      chaosMode:"set",
+      progress,
+      minX:8,
+      maxX:92,
+      minY:20,
+      maxY:90,
+      moveDuration:550,
+      reactionHold:780
+    });
   }
 
   async function playVerificationScenario(scenarioKey) {
