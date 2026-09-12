@@ -328,8 +328,8 @@
     if (!els.stage) return;
     els.stage.classList.remove("has-active-character", "is-payoff");
     els.stage.removeAttribute("data-visual-phase");
-    $(".actor", els.stage).forEach(el => el.classList.remove("is-active-character", "focus", "is-payoff-escape"));
-    $(".prop-object", els.stage).forEach(el => el.classList.remove("is-active-target"));
+    $$(".actor", els.stage).forEach(el => el.classList.remove("is-active-character", "focus", "is-payoff-escape"));
+    $$(".prop-object", els.stage).forEach(el => el.classList.remove("is-active-target"));
     if (els.sceneFocus) {
       els.sceneFocus.style.removeProperty("--focus-x");
       els.sceneFocus.style.removeProperty("--focus-y");
