@@ -811,6 +811,117 @@
     if (includeMoney) addProp("money", 81, 58);
   }
 
+  function resolveJudgeScenario() {
+    const hasFormula = !!propByKey("formula");
+    const hasMoney = !!propByKey("money");
+    const has = key => !!actorByKey(key);
+    const events = [];
+
+    const krabsMoneyScore = has("mrkrabs") && hasMoney ? PERSONALITY_WEIGHTS.mrkrabs.money_priority : 0;
+    const krabsFormulaScore = has("mrkrabs") && hasFormula ? PERSONALITY_WEIGHTS.mrkrabs.formula_priority : 0;
+    const krabsChoice = krabsMoneyScore > krabsFormulaScore ? "money" : (krabsFormulaScore > 0 ? "formula" : null);
+
+    const spongeProtectScore = has("spongebob") && hasFormula ? PERSONALITY_WEIGHTS.spongebob.protect : 0;
+    const spongeFollowScore = has("spongebob") && krabsChoice === "money" ? PERSONALITY_WEIGHTS.spongebob.follow_authority : 0;
+    const spongeChoice = spongeFollowScore > spongeProtectScore ? "money" : (spongeProtectScore > 0 ? "formula" : null);
+
+    const patrickNoveltyScore = has("patrick") && hasMoney ? PERSONALITY_WEIGHTS.patrick.novelty_drive : 0;
+    const defenders = (krabsChoice === "formula" ? 1 : 0) + (spongeChoice === "formula" ? 1 : 0);
+
+    if (hasMoney) {
+      if (patrickNoveltyScore > PERSONALITY_WEIGHTS.patrick.impulse_control) {
+        events.push({
+          actor:"patrick", text:"Ooooh… money.", trait:"IMPULSIVE",
+          why:"Money creates a novelty score higher than Patrick’s impulse control.",
+          target:"money", chaos:48
+        });
+      }
+
+      if (krabsChoice === "money") {
+        events.push({
+          actor:"mrkrabs", text:"MONEY?!", trait:"MONEY > EVERYTHING",
+          why:"money_priority (" + krabsMoneyScore + ") beats formula_priority (" + krabsFormulaScore + ").",
+          target:"money", chaos:61, grabs:"money"
+        });
+      }
+
+      if (spongeChoice === "money") {
+        events.push({
+          actor:"spongebob", text:"Mr. Krabs?", trait:"HELPFUL · DISTRACTIBLE",
+          why:"follow_authority (" + spongeFollowScore + ") beats protect (" + spongeProtectScore + ").",
+          target:"money", chaos:70
+        });
+      }
+
+      if (has("plankton") && hasFormula) {
+        const canSteal = defenders === 0;
+        events.push({
+          actor:"plankton",
+          text: canSteal ? "Perfect distraction." : "Formula detected.",
+          trait: canSteal ? "SCHEMING" : "FORMULA-OBSESSED",
+          why: canSteal
+            ? "No active defenders remain, so opportunism activates."
+            : "formula_obsession stays high, but defenders are still present.",
+          target:"formula",
+          chaos: canSteal ? 88 : 62,
+          ...(canSteal ? { takes:"formula" } : {})
+        });
+      }
+    } else {
+      if (has("plankton") && hasFormula) {
+        events.push({
+          actor:"plankton", text:"Formula detected.", trait:"FORMULA-OBSESSED",
+          why:"formula_obsession (" + PERSONALITY_WEIGHTS.plankton.formula_obsession + ") targets the visible formula.",
+          target:"formula", chaos:25
+        });
+      }
+
+      if (spongeChoice === "formula") {
+        events.push({
+          actor:"spongebob", text:"Protect the formula!", trait:"LOYAL · PROTECTIVE",
+          why:"protect (" + spongeProtectScore + ") is SpongeBob’s strongest active rule.",
+          target:"formula", chaos:34
+        });
+      }
+
+      if (krabsChoice === "formula") {
+        events.push({
+          actor:"mrkrabs", text:"Nobody touches me formula!", trait:"PROTECTIVE",
+          why:"Without money present, formula_priority (" + krabsFormulaScore + ") stays active.",
+          target:"formula", chaos:38
+        });
+      }
+
+      if (has("patrick")) {
+        events.push({
+          actor:"patrick", text:"I’ll just watch.", trait:"CURIOUS",
+          why:"No stimulus exceeds Patrick’s impulse threshold.",
+          chaos:36
+        });
+      }
+    }
+
+    const formulaStolen = has("plankton") && hasFormula && defenders === 0;
+    const outcome = formulaStolen ? "❌ FORMULA STOLEN" : "✅ FORMULA SAFE";
+
+    return {
+      includeMoney: hasMoney,
+      label: hasMoney ? "SAME SETUP + 💵 MONEY" : "ORIGINAL SETUP",
+      outcome,
+      events,
+      decisionState: {
+        krabsMoneyScore,
+        krabsFormulaScore,
+        krabsChoice,
+        spongeProtectScore,
+        spongeFollowScore,
+        spongeChoice,
+        patrickNoveltyScore,
+        defenders
+      }
+    };
+  }
+
   function fingerprint(value) {
     return "#" + hashString(value).toString(16).padStart(8, "0").toUpperCase();
   }
@@ -856,8 +967,10 @@
   }
 
   function fillJudgeComparison() {
-    els.roundOneOutcome.textContent = JUDGE_SCENARIOS.baseline.outcome;
-    els.roundTwoOutcome.textContent = JUDGE_SCENARIOS.changed.outcome;
+    const baseline = state.judgeBaselineScenario;
+    const changed = state.judgeChangedScenario;
+    els.roundOneOutcome.textContent = baseline?.outcome || "✅ FORMULA SAFE";
+    els.roundTwoOutcome.textContent = changed?.outcome || "❌ FORMULA STOLEN";
     els.roundOneEvents.innerHTML = [
       "Plankton targets formula",
       "SpongeBob protects it",
@@ -898,7 +1011,6 @@
   }
 
   async function playVerificationScenario(scenarioKey) {
-    const scenario = JUDGE_SCENARIOS[scenarioKey];
     const token = ++state.runToken;
 
     showScreen("play");
@@ -907,7 +1019,8 @@
     els.judgeProgress.hidden = false;
     els.judgeProgressFill.style.width = "0%";
 
-    setupJudgeRound(scenario.includeMoney);
+    setupJudgeRound(scenarioKey === "changed");
+    const scenario = resolveJudgeScenario();
     const runFingerprint = captureJudgeFingerprint(scenario);
     setChaos(8);
 
@@ -972,8 +1085,9 @@
     els.judgeProgressFill.style.width = "0%";
     els.compareOverlay.hidden = true;
 
-    const round1 = JUDGE_SCENARIOS.baseline;
-    setupJudgeRound(round1.includeMoney);
+    setupJudgeRound(false);
+    const round1 = resolveJudgeScenario();
+    state.judgeBaselineScenario = round1;
     state.determinismBaseline = captureJudgeFingerprint(round1);
 
     setChaos(8);
@@ -1004,8 +1118,9 @@
     await sleep(950);
     if (token !== state.runToken) return;
 
-    const round2 = JUDGE_SCENARIOS.changed;
-    setupJudgeRound(round2.includeMoney);
+    setupJudgeRound(true);
+    const round2 = resolveJudgeScenario();
+    state.judgeChangedScenario = round2;
     els.changeBadge.classList.remove("is-on");
     els.butterflyFx.classList.remove("is-on");
     overlay("", false);
