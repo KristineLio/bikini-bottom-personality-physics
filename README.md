@@ -4,7 +4,7 @@
 >
 > A deterministic character simulation where the same world state produces the same chain of decisions — until one variable changes.
 
-![Animated butterfly-effect demo](docs/butterfly-demo.svg)
+![Animated butterfly-effect demo](docs/butterfly-demo.gif)
 
 <p align="center">
   <strong>Bikini Bottom: Personality Physics</strong> is the original hackathon skin for the engine.
