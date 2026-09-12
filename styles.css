@@ -545,3 +545,283 @@ h1 span{color:var(--yellow)}
   .actor.is-facing-left .actor-carry{left:0}
   .hero-character .toon{width:80px!important;height:96px!important}
 }
+
+/* V2.2 — one obvious judge path on the home screen */
+.screen-home{
+  padding-top:28px;
+}
+.hero-shell{
+  grid-template-columns:1fr!important;
+  max-width:1180px!important;
+  gap:26px!important;
+  justify-items:center;
+  text-align:center;
+}
+.hero-copy{
+  width:min(100%,1040px);
+  display:grid;
+  justify-items:center;
+  padding-top:8px!important;
+}
+.hero-copy h1{
+  margin-bottom:14px;
+}
+.hero-tagline{
+  margin-bottom:12px!important;
+}
+.physics-rules{
+  justify-content:center;
+  margin:10px 0 22px!important;
+}
+.judge-path{
+  width:min(100%,780px);
+  justify-items:center!important;
+  gap:10px!important;
+  margin:2px auto 0;
+}
+.btn-judge{
+  position:relative;
+  width:100%;
+  min-height:112px;
+  padding:20px 28px 18px!important;
+  display:grid;
+  place-items:center;
+  text-align:center!important;
+  overflow:hidden;
+  border:4px solid rgba(255,255,255,.96)!important;
+  border-radius:25px!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(255,255,255,.52),transparent 38%),
+    linear-gradient(180deg,#fff78a 0%,#ffdc3d 65%,#f8c922 100%)!important;
+  box-shadow:
+    0 10px 0 #0b3a66,
+    0 18px 38px rgba(2,32,64,.35),
+    0 0 0 5px rgba(255,255,255,.12)!important;
+  transform:translateY(0);
+  animation:judgeCtaGlow 2.4s ease-in-out infinite;
+}
+.btn-judge:before{
+  content:"";
+  position:absolute;
+  inset:-40% -15%;
+  background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.5) 48%,transparent 61%);
+  transform:translateX(-70%);
+  animation:judgeShine 3.2s ease-in-out infinite;
+  pointer-events:none;
+}
+.btn-judge:hover{
+  transform:translateY(-4px) scale(1.01)!important;
+  box-shadow:
+    0 14px 0 #0b3a66,
+    0 24px 46px rgba(2,32,64,.38),
+    0 0 0 6px rgba(255,255,255,.16)!important;
+}
+.btn-judge:active{
+  transform:translateY(5px) scale(.995)!important;
+  box-shadow:0 5px 0 #0b3a66,0 12px 24px rgba(2,32,64,.28)!important;
+}
+.btn-judge .btn-kicker{
+  position:relative;
+  z-index:1;
+  margin:0 0 4px!important;
+  font-size:10px!important;
+  letter-spacing:.18em!important;
+  color:#6d5200!important;
+}
+.judge-cta-label{
+  position:relative;
+  z-index:1;
+  display:block;
+  font-family:Bungee,Impact,"Arial Black",sans-serif;
+  font-size:clamp(22px,3.4vw,38px);
+  line-height:1.05;
+  color:#16324f;
+  text-shadow:0 2px 0 rgba(255,255,255,.5);
+}
+.judge-cta-sub{
+  position:relative;
+  z-index:1;
+  display:block;
+  margin-top:7px;
+  font-size:12px;
+  font-weight:900;
+  color:#36516a;
+}
+.secondary-label{
+  margin-top:7px;
+  font-family:Bungee,Impact,"Arial Black",sans-serif;
+  font-size:8px;
+  letter-spacing:.14em;
+  color:rgba(236,254,255,.76);
+}
+.secondary-modes{
+  display:flex!important;
+  align-items:center;
+  justify-content:center;
+  gap:9px!important;
+  min-height:32px;
+  padding:2px 10px;
+}
+.secondary-modes>span{
+  color:rgba(255,255,255,.6);
+  font-size:16px;
+  line-height:1;
+}
+.mode-link{
+  appearance:none;
+  border:0;
+  background:transparent;
+  color:#e9fbff;
+  padding:5px 3px;
+  font-size:11px;
+  font-weight:900;
+  cursor:pointer;
+  text-decoration:underline;
+  text-decoration-color:rgba(255,255,255,.3);
+  text-underline-offset:4px;
+  transition:color .14s ease,transform .14s ease,text-decoration-color .14s ease;
+}
+.mode-link:hover{
+  color:#fff;
+  transform:translateY(-1px);
+  text-decoration-color:#fff;
+}
+.hero-world{
+  width:min(100%,760px);
+  min-height:420px!important;
+  margin-top:4px;
+}
+.hero-stage-card{
+  width:min(100%,660px)!important;
+}
+.hero-stage{
+  min-height:390px!important;
+}
+.trait-strip{
+  max-width:1180px!important;
+  margin-top:16px!important;
+}
+.example-episode-card{
+  position:relative;
+  z-index:3;
+  max-width:900px;
+  margin:18px auto 0;
+  display:grid;
+  grid-template-columns:130px minmax(0,1fr) auto;
+  gap:16px;
+  align-items:center;
+  padding:14px 16px;
+  background:rgba(255,249,221,.95);
+  border:3px solid var(--ink);
+  border-radius:20px;
+  box-shadow:0 7px 0 rgba(6,59,104,.52),0 15px 30px rgba(2,32,64,.2);
+  text-align:left;
+}
+.example-episode-art{
+  min-height:94px;
+  display:grid;
+  place-items:center;
+  border:2px solid var(--ink);
+  border-radius:14px;
+  background:linear-gradient(180deg,#79d6f7 0 50%,#c88440 50% 100%);
+  overflow:hidden;
+}
+.example-mini-stage{
+  display:flex;
+  align-items:center;
+  gap:3px;
+}
+.example-mini-stage .toon{
+  width:44px!important;
+  height:68px!important;
+}
+.example-arrow{
+  font-weight:900;
+  font-size:17px;
+}
+.example-formula{
+  font-size:28px;
+  filter:drop-shadow(0 3px 2px rgba(0,0,0,.2));
+}
+.example-impact{
+  font-size:20px;
+  margin-left:-4px;
+}
+.example-kicker{
+  display:block;
+  font-family:Bungee,Impact,"Arial Black",sans-serif;
+  font-size:8px;
+  letter-spacing:.11em;
+  color:#0873b5;
+  margin-bottom:4px;
+}
+.example-episode-copy h2{
+  margin:0 0 5px;
+  font-size:17px;
+}
+.example-episode-copy p{
+  margin:0;
+  font-size:10px;
+  line-height:1.35;
+  font-weight:800;
+  color:#36516a;
+}
+.example-episode-button{
+  white-space:nowrap;
+  padding:10px 13px!important;
+  font-size:10px!important;
+  box-shadow:0 4px 0 rgba(6,59,104,.45)!important;
+}
+@keyframes judgeCtaGlow{
+  0%,100%{filter:drop-shadow(0 0 0 rgba(255,238,102,0))}
+  50%{filter:drop-shadow(0 0 14px rgba(255,238,102,.5))}
+}
+@keyframes judgeShine{
+  0%,45%{transform:translateX(-75%)}
+  65%,100%{transform:translateX(75%)}
+}
+@media(max-width:720px){
+  .hero-shell{gap:18px!important}
+  .hero-copy{width:100%}
+  .physics-rules{gap:7px}
+  .physics-rules span{font-size:8px;padding:6px 8px}
+  .btn-judge{min-height:104px;padding:17px 14px 15px!important;border-radius:20px!important}
+  .judge-cta-label{font-size:clamp(20px,7vw,30px)}
+  .judge-cta-sub{font-size:10px;max-width:92%}
+  .secondary-modes{gap:6px!important}
+  .mode-link{font-size:10px}
+  .hero-world{min-height:360px!important}
+  .hero-stage{min-height:340px!important}
+  .example-episode-card{
+    grid-template-columns:92px 1fr;
+    gap:10px;
+  }
+  .example-episode-button{
+    grid-column:1/-1;
+    width:100%;
+  }
+}
+@media(max-width:480px){
+  .btn-judge{min-height:98px}
+  .btn-judge .btn-kicker{font-size:8px!important}
+  .judge-cta-label{font-size:21px}
+  .judge-cta-sub{font-size:9px}
+  .secondary-modes{
+    display:flex!important;
+    flex-wrap:wrap;
+    row-gap:2px!important;
+  }
+  .mode-link{font-size:9px}
+  .hero-world{min-height:315px!important}
+  .hero-stage{min-height:300px!important}
+  .example-episode-card{
+    grid-template-columns:1fr;
+    text-align:center;
+  }
+  .example-episode-art{
+    display:none;
+  }
+}
+@media (prefers-reduced-motion:reduce){
+  .btn-judge,.btn-judge:before{animation:none!important}
+}
