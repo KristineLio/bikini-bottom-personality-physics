@@ -732,96 +732,323 @@
     const mrkrabs = actorByKey("mrkrabs");
     const patrick = actorByKey("patrick");
     const squidward = actorByKey("squidward");
+
     const formula = propByKey("formula");
     const money = propByKey("money");
     const clarinet = propByKey("clarinet");
     const jellyfish = propByKey("jellyfish");
 
-    const moneyDistraction = money && ((mrkrabs && distance(mrkrabs, money) < 42) || (patrick && distance(patrick, money) < 42));
+    // Competing motivations are scored from personality weight + proximity.
+    // The special Director Mode setup is only placement: this resolver never
+    // checks which preset loaded it.
+    const krabsMoneyScore = mrkrabs && money
+      ? PERSONALITY_WEIGHTS.mrkrabs.money_priority * (.72 + .28 * proximityWeight(mrkrabs, money))
+      : 0;
+    const krabsFormulaScore = mrkrabs && formula
+      ? PERSONALITY_WEIGHTS.mrkrabs.formula_priority * (.72 + .28 * proximityWeight(mrkrabs, formula))
+      : 0;
+    const krabsChoice = krabsMoneyScore > krabsFormulaScore
+      ? "money"
+      : (krabsFormulaScore > 0 ? "formula" : null);
 
-    if (plankton && formula) {
-      events.push({ actor: "plankton", text: "Formula detected.", trait: "FORMULA-OBSESSED", target: "formula", chaos: 18 });
-      cause.push("📜 Formula exists", "→", "🦠 Plankton targets it");
-      chaos += 18;
+    const spongeProtectScore = sponge && formula
+      ? PERSONALITY_WEIGHTS.spongebob.protect * (.72 + .28 * proximityWeight(sponge, formula))
+      : 0;
+    const spongeFollowScore = sponge && mrkrabs && krabsChoice === "money"
+      ? PERSONALITY_WEIGHTS.spongebob.follow_authority * (.72 + .28 * proximityWeight(sponge, mrkrabs))
+      : 0;
+    const spongeChoice = spongeFollowScore > spongeProtectScore
+      ? "money"
+      : (spongeProtectScore > 0 ? "formula" : null);
 
-      if (moneyDistraction && mrkrabs && patrick) {
-        events.push({ actor: "patrick", text: "Ooooh… money.", trait: "IMPULSIVE", target: "money", chaos: 12 });
-        events.push({ actor: "mrkrabs", text: "MONEY?!", trait: "MONEY > EVERYTHING", target: "money", chaos: 17, grabs: "money" });
-        if (sponge) events.push({ actor: "spongebob", text: "Mr. Krabs?", trait: "HELPFUL · DISTRACTIBLE", target: "money", chaos: 8 });
-        events.push({ actor: "plankton", text: "Perfect distraction.", trait: "SCHEMING", target: "formula", chaos: 24, takes: "formula" });
-        outcome = "PLANKTON STEALS THE FORMULA";
-        cause.push("→", "💵 Money distracts the room", "→", "📜 Formula stolen");
-        chaos += 34;
-      } else if (sponge && distance(sponge, formula) < 40) {
-        events.push({ actor: "spongebob", text: "Protect the formula!", trait: "LOYAL · PROTECTIVE", target: "formula", chaos: 12 });
-        if (mrkrabs) events.push({ actor: "mrkrabs", text: "Nobody touches me formula!", trait: "PROTECTIVE", target: "formula", chaos: 10 });
-        outcome = "THE FORMULA IS SAFE";
-        cause.push("→", "🧽 SpongeBob protects it", "→", "✅ Formula safe");
-        chaos += 12;
-      } else {
-        events.push({ actor: "plankton", text: "Too easy.", trait: "SCHEMING", target: "formula", chaos: 25, takes: "formula" });
-        outcome = "PLANKTON STEALS THE FORMULA";
-        cause.push("→", "🚫 Nobody is close enough", "→", "📜 Formula stolen");
-        chaos += 25;
-      }
+    const patrickMoneyScore = patrick && money
+      ? PERSONALITY_WEIGHTS.patrick.novelty_drive * (.68 + .32 * proximityWeight(patrick, money))
+      : 0;
+    const patrickChoosesMoney = patrickMoneyScore > PERSONALITY_WEIGHTS.patrick.impulse_control;
+
+    const planktonTargetsFormula = !!(plankton && formula);
+    const patrickPathHitsClarinet = !!(
+      patrickChoosesMoney &&
+      patrick && money && clarinet &&
+      pointToSegmentDistance(clarinet, patrick, money) < 11
+    );
+    const squidwardProtectsClarinet = !!(
+      squidward && clarinet &&
+      distance(squidward, clarinet) < 30 &&
+      (patrickPathHitsClarinet || distance(patrick, clarinet) < 24)
+    );
+
+    const activeDefenders =
+      (krabsChoice === "formula" ? 1 : 0) +
+      (spongeChoice === "formula" ? 1 : 0);
+
+    if (planktonTargetsFormula) {
+      events.push({
+        actor:"plankton",
+        text:"Formula detected.",
+        trait:"FORMULA-OBSESSED",
+        why:"formula_obsession = HIGH: a visible formula becomes Plankton’s target.",
+        target:"formula",
+        chaos:18,
+        chainLabel:"Plankton locks onto the formula"
+      });
+      chaos += 12;
     }
 
-    if (squidward && clarinet && distance(squidward, clarinet) < 42) {
-      events.push({ actor: "squidward", text: "Not my clarinet!", trait: "PROTECTS HIS CLARINET", target: "clarinet", chaos: 8 });
-      if (outcome === "THE EPISODE STAYS CALM") outcome = "SQUIDWARD PROTECTS HIS CLARINET";
+    if (patrickChoosesMoney) {
+      events.push({
+        actor:"patrick",
+        text:"Ooooh… money.",
+        trait:"IMPULSIVE",
+        why:"novelty_drive (" + Math.round(patrickMoneyScore) + ") beats impulse_control (" + PERSONALITY_WEIGHTS.patrick.impulse_control + ").",
+        target:"money",
+        chaos:12,
+        chainLabel:"Money pulls Patrick across the room"
+      });
+      chaos += 10;
+    }
+
+    if (squidwardProtectsClarinet) {
+      events.push({
+        actor:"squidward",
+        text:"Watch the clarinet!",
+        trait:"PROTECTS HIS CLARINET",
+        why:"Patrick’s route passes through Squidward’s clarinet safety radius.",
+        target:"clarinet",
+        chaos:10,
+        chainLabel:"Patrick’s path triggers Squidward"
+      });
+      chaos += 10;
+    } else if (squidward && clarinet && distance(squidward, clarinet) < 22) {
+      events.push({
+        actor:"squidward",
+        text:"Nobody touch this.",
+        trait:"PROTECTS HIS CLARINET",
+        why:"clarinet_protection stays active because the clarinet is inside Squidward’s personal zone.",
+        target:"clarinet",
+        chaos:5,
+        chainLabel:"Squidward guards the clarinet"
+      });
+      chaos += 5;
+    }
+
+    if (krabsChoice === "money") {
+      events.push({
+        actor:"mrkrabs",
+        text:"MONEY?!",
+        trait:"MONEY > EVERYTHING",
+        why:"money_priority (" + Math.round(krabsMoneyScore) + ") beats formula_priority (" + Math.round(krabsFormulaScore) + ").",
+        target:"money",
+        chaos:17,
+        grabs:"money",
+        chainLabel:"Krabs abandons defense for money"
+      });
+      chaos += 16;
+    } else if (krabsChoice === "formula") {
+      events.push({
+        actor:"mrkrabs",
+        text:"Nobody touches me formula!",
+        trait:"PROTECTIVE",
+        why:"formula_priority wins because no stronger money stimulus is active.",
+        target:"formula",
+        chaos:10,
+        chainLabel:"Krabs stays on formula defense"
+      });
       chaos += 8;
     }
 
+    if (spongeChoice === "money") {
+      events.push({
+        actor:"spongebob",
+        text:"Mr. Krabs?",
+        trait:"HELPFUL · DISTRACTIBLE",
+        why:"follow_authority (" + Math.round(spongeFollowScore) + ") beats protect (" + Math.round(spongeProtectScore) + ").",
+        target:"money",
+        chaos:8,
+        chainLabel:"SpongeBob follows Krabs"
+      });
+      chaos += 8;
+    } else if (spongeChoice === "formula") {
+      events.push({
+        actor:"spongebob",
+        text:"Protect the formula!",
+        trait:"LOYAL · PROTECTIVE",
+        why:"protect (" + Math.round(spongeProtectScore) + ") remains SpongeBob’s strongest active rule.",
+        target:"formula",
+        chaos:12,
+        chainLabel:"SpongeBob protects the formula"
+      });
+      chaos += 10;
+    }
+
+    const formulaStolen = planktonTargetsFormula && activeDefenders === 0;
+    if (formulaStolen) {
+      events.push({
+        actor:"plankton",
+        text: squidwardProtectsClarinet ? "Everyone looked away." : "Perfect distraction.",
+        trait:"SCHEMING",
+        why:"No active formula defender remains, so Plankton’s opportunism rule fires.",
+        target:"formula",
+        chaos:24,
+        takes:"formula",
+        chainLabel:"Plankton exploits the opening"
+      });
+      chaos += 24;
+      outcome = squidwardProtectsClarinet && patrickChoosesMoney && krabsChoice === "money"
+        ? "CHAIN REACTION: PLANKTON STEALS THE FORMULA"
+        : "PLANKTON STEALS THE FORMULA";
+    } else if (planktonTargetsFormula) {
+      outcome = "THE FORMULA IS SAFE";
+    }
+
     if (state.scene === "fields" && jellyfish) {
-      if (patrick) events.push({ actor: "patrick", text: "Jellyfish!", trait: "CURIOUS", target: "jellyfish", chaos: 10 });
-      if (sponge) events.push({ actor: "spongebob", text: "Let’s go jellyfishing!", trait: "ENTHUSIASTIC", target: "jellyfish", chaos: 7 });
+      if (patrick) {
+        events.push({
+          actor:"patrick", text:"Jellyfish!", trait:"CURIOUS",
+          why:"curiosity beats Patrick’s current task.",
+          target:"jellyfish", chaos:10,
+          chainLabel:"Jellyfish hijacks Patrick’s attention"
+        });
+      }
+      if (sponge) {
+        events.push({
+          actor:"spongebob", text:"Let’s go jellyfishing!", trait:"ENTHUSIASTIC",
+          why:"The jellyfish becomes the strongest scene-specific stimulus.",
+          target:"jellyfish", chaos:7,
+          chainLabel:"SpongeBob joins the distraction"
+        });
+      }
       if (outcome === "THE EPISODE STAYS CALM") outcome = "JELLYFISHING TAKES OVER THE EPISODE";
       chaos += 15;
     }
 
     if (prop("spatula") && has("spongebob") && state.scene === "krusty") {
-      events.push({ actor: "spongebob", text: "Order up!", trait: "LOVES HIS JOB", target: "spatula", chaos: -4 });
+      events.push({
+        actor:"spongebob", text:"Order up!", trait:"LOVES HIS JOB",
+        why:"work_instinct activates on the spatula cue.",
+        target:"spatula", chaos:-4,
+        chainLabel:"Work instinct pulls SpongeBob back"
+      });
       chaos = Math.max(5, chaos - 4);
       if (outcome === "THE EPISODE STAYS CALM") outcome = "SPONGEBOB SAVES THE LUNCH RUSH";
     }
 
+    const isChainReaction = !!(
+      formulaStolen &&
+      patrickChoosesMoney &&
+      squidwardProtectsClarinet &&
+      krabsChoice === "money"
+    );
+
+    if (isChainReaction) {
+      cause = [
+        "💵 Money stimulus",
+        "→",
+        "⭐ Patrick crosses the room",
+        "→",
+        "🎵 Squidward protects clarinet",
+        "→",
+        "🦀 Krabs chooses money",
+        "→",
+        "📜 Plankton exploits the opening"
+      ];
+    } else if (formulaStolen) {
+      cause = [
+        "📜 Formula visible",
+        "→",
+        krabsChoice === "money" ? "💵 Krabs chooses money" : "🚫 No defender nearby",
+        "→",
+        "🦠 Plankton sees opening",
+        "→",
+        "📜 Formula stolen"
+      ];
+    } else if (planktonTargetsFormula) {
+      cause = [
+        "📜 Formula visible",
+        "→",
+        activeDefenders > 0 ? "🛡️ Personality rules keep a defender active" : "🦠 Plankton targets it",
+        "→",
+        "✅ Formula safe"
+      ];
+    }
+
     if (!events.length) {
       const first = state.actors[0];
-      if (first) events.push({ actor: first.key, text: "Nothing to react to… yet.", trait: CHARACTERS[first.key].traits, chaos: 2 });
+      if (first) {
+        events.push({
+          actor:first.key,
+          text:"Nothing to react to… yet.",
+          trait:CHARACTERS[first.key].traits,
+          why:"No stimulus crosses this character’s active threshold.",
+          chaos:2,
+          chainLabel:"No strong stimulus"
+        });
+      }
       cause = ["🎬 Setup", "→", "😌 No strong trigger", "→", "🌊 Low chaos"];
     }
 
-    return { outcome, events, cause, chaos: clamp(chaos, 4, 100) };
+    return {
+      outcome,
+      events,
+      cause,
+      chaos:clamp(chaos, 4, 100),
+      isChainReaction,
+      scores:{
+        krabsMoneyScore:Math.round(krabsMoneyScore),
+        krabsFormulaScore:Math.round(krabsFormulaScore),
+        spongeProtectScore:Math.round(spongeProtectScore),
+        spongeFollowScore:Math.round(spongeFollowScore),
+        patrickMoneyScore:Math.round(patrickMoneyScore),
+        activeDefenders
+      }
+    };
   }
 
   async function runDirectorSimulation() {
     const token = ++state.runToken;
     hideResult();
     hideBanner();
+    hideChainBadge();
     state.props.forEach(p => p.taken = false);
     state.actors.forEach(a => a.carry = null);
     renderStage();
 
     const result = directorSimulation();
-    setChaos(12);
-    showBanner("ACTION — PERSONALITY RULES ARE LIVE");
+    setChaos(result.isChainReaction ? 22 : 12);
+    showBanner(result.isChainReaction
+      ? "⚡ MOTIVATION COLLISION — WATCH THE RIPPLE"
+      : "ACTION — PERSONALITY RULES ARE LIVE"
+    );
     await sleep(650);
     if (token !== state.runToken) return;
     hideBanner();
 
-    for (const event of result.events) {
+    for (let i = 0; i < result.events.length; i++) {
+      const event = result.events[i];
       if (token !== state.runToken) return;
+
+      if (result.isChainReaction) {
+        showChainBadge(i + 1, result.events.length, event.chainLabel || "World state changed");
+      }
+
       showPhysics(event);
+
       const target = event.target && propByKey(event.target);
       const actor = actorByKey(event.actor);
       if (target && actor) {
         const side = actor.x <= target.x ? -8 : 8;
         await walkActorTo(event.actor, clamp(target.x + side, 7, 93), clamp(target.y + 10, 18, 90), 520);
       }
+
       react(event.actor, event.text, event.trait);
-      showNarrator(CHARACTERS[event.actor]?.name || "Narrator", "because " + event.trait.toLowerCase() + ".");
+      showNarrator(
+        CHARACTERS[event.actor]?.name || "Narrator",
+        event.why || ("because " + event.trait.toLowerCase() + ".")
+      );
+
       setChaos(state.chaos + (event.chaos || 5));
-      await sleep(1000);
+      await sleep(result.isChainReaction ? 1120 : 1000);
+
       if (event.grabs) markPropTaken(event.grabs, true, event.actor);
       if (event.takes) {
         markPropTaken(event.takes, true, event.actor);
@@ -833,6 +1060,15 @@
     if (token !== state.runToken) return;
     hideNarrator();
     hidePhysics();
+    hideChainBadge();
+
+    if (result.isChainReaction) {
+      showBanner("OH. ONE ROOM → FOUR MOTIVES → ONE CHAIN REACTION");
+      await sleep(950);
+      if (token !== state.runToken) return;
+      hideBanner();
+    }
+
     showResult(result);
   }
 
