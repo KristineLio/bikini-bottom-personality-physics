@@ -1,0 +1,811 @@
+(() => {
+  "use strict";
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+  const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+
+  const CHARACTERS = {
+    spongebob: {
+      name: "SpongeBob",
+      css: "toon-spongebob",
+      traits: "HELPFUL · LOYAL",
+      voice: { pitch: 1.38, rate: 1.08 }
+    },
+    patrick: {
+      name: "Patrick",
+      css: "toon-patrick",
+      traits: "CURIOUS · IMPULSIVE",
+      voice: { pitch: .78, rate: .86 }
+    },
+    squidward: {
+      name: "Squidward",
+      css: "toon-squidward",
+      traits: "IRRITABLE · AVOIDS CHAOS",
+      voice: { pitch: .72, rate: .96 }
+    },
+    mrkrabs: {
+      name: "Mr. Krabs",
+      css: "toon-mrkrabs",
+      traits: "MONEY-OBSESSED",
+      voice: { pitch: .8, rate: 1.02 }
+    },
+    plankton: {
+      name: "Plankton",
+      css: "toon-plankton",
+      traits: "FORMULA-OBSESSED",
+      voice: { pitch: 1.5, rate: 1.12 }
+    }
+  };
+
+  const PROPS = {
+    formula: { name: "Secret Formula", icon: "📜" },
+    money: { name: "Money", icon: "💵" },
+    clarinet: { name: "Clarinet", icon: "🎵" },
+    spatula: { name: "Spatula", icon: "🍳" },
+    jellyfish: { name: "Jellyfish", icon: "🪼" },
+    conch: { name: "Magic Conch", icon: "🐚", css: "magic-conch" }
+  };
+
+  const SCENES = {
+    krusty: "THE KRUSTY KRAB",
+    chum: "CHUM BUCKET LAB",
+    fields: "JELLYFISH FIELDS",
+    house: "SPONGEBOB’S HOUSE",
+    street: "CONCH STREET"
+  };
+
+  const state = {
+    scene: "krusty",
+    actors: [],
+    props: [],
+    mode: "home",
+    voice: false,
+    runToken: 0,
+    dragging: null,
+    chaos: 8
+  };
+
+  const els = {
+    home: $("#home"),
+    play: $("#play"),
+    stage: $("#stage"),
+    stageActors: $("#stageActors"),
+    stageProps: $("#stageProps"),
+    sceneToolbar: $("#sceneToolbar"),
+    sceneTitle: $("#sceneTitle"),
+    directorPanel: $("#directorPanel"),
+    conchPanel: $("#conchPanel"),
+    resultDock: $("#resultDock"),
+    eventTimeline: $("#eventTimeline"),
+    causeFlow: $("#causeFlow"),
+    resultHeadline: $("#resultHeadline"),
+    chaosPct: $("#chaosPct"),
+    chaosFill: $("#chaosFill"),
+    modeTitle: $("#modeTitle"),
+    modeSubtitle: $("#modeSubtitle"),
+    voiceBtn: $("#btnVoice"),
+    judgeOverlay: $("#judgeOverlay"),
+    butterflyFx: $("#butterflyFx"),
+    changeBadge: $("#changeBadge"),
+    narrator: $("#narrator"),
+    stageBanner: $("#stageBanner"),
+    judgeProgress: $("#judgeProgress"),
+    judgeRoundLabel: $("#judgeRoundLabel"),
+    judgeProgressText: $("#judgeProgressText"),
+    judgeProgressFill: $("#judgeProgressFill"),
+    compareOverlay: $("#compareOverlay"),
+    roundOneOutcome: $("#roundOneOutcome"),
+    roundTwoOutcome: $("#roundTwoOutcome"),
+    roundOneEvents: $("#roundOneEvents"),
+    roundTwoEvents: $("#roundTwoEvents"),
+    conchQuestion: $("#conchQuestion"),
+    conchAnswer: $("#conchAnswer"),
+    castTray: $("#castTray"),
+    propTray: $("#propTray")
+  };
+
+  function toonMarkup(key, small = false) {
+    const c = CHARACTERS[key];
+    return '<div class="' + (small ? "toon mini-object-toon " : "toon ") + c.css + '"><span></span></div>';
+  }
+
+  function showScreen(which) {
+    els.home.classList.toggle("is-active", which === "home");
+    els.play.classList.toggle("is-active", which === "play");
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+
+  function setChaos(value) {
+    state.chaos = clamp(Math.round(value), 0, 100);
+    els.chaosPct.textContent = state.chaos + "%";
+    els.chaosFill.style.width = state.chaos + "%";
+  }
+
+  function setScene(scene) {
+    state.scene = SCENES[scene] ? scene : "krusty";
+    els.stage.className = "stage scene-" + state.scene;
+    els.sceneTitle.textContent = SCENES[state.scene];
+    $$(".scene-chip").forEach(btn => btn.classList.toggle("is-active", btn.dataset.scene === state.scene));
+  }
+
+  function clearStage() {
+    state.actors = [];
+    state.props = [];
+    renderStage();
+    hideResult();
+    hideNarrator();
+    hideBanner();
+    setChaos(8);
+  }
+
+  function actorByKey(key) {
+    return state.actors.find(a => a.key === key);
+  }
+
+  function propByKey(key) {
+    return state.props.find(p => p.key === key);
+  }
+
+  function addActor(key, x = 50, y = 65) {
+    if (!CHARACTERS[key]) return null;
+    const existing = actorByKey(key);
+    if (existing) {
+      existing.x = x;
+      existing.y = y;
+      renderStage();
+      return existing;
+    }
+    const obj = { id: "actor-" + key, key, x, y };
+    state.actors.push(obj);
+    renderStage();
+    return obj;
+  }
+
+  function addProp(key, x = 50, y = 56) {
+    if (!PROPS[key]) return null;
+    const existing = propByKey(key);
+    if (existing) {
+      existing.x = x;
+      existing.y = y;
+      renderStage();
+      return existing;
+    }
+    const obj = { id: "prop-" + key, key, x, y, taken: false };
+    state.props.push(obj);
+    renderStage();
+    return obj;
+  }
+
+  function removeObject(type, key) {
+    if (type === "actor") state.actors = state.actors.filter(a => a.key !== key);
+    else state.props = state.props.filter(p => p.key !== key);
+    renderStage();
+  }
+
+  function renderStage() {
+    els.stageActors.innerHTML = state.actors.map(a => {
+      const c = CHARACTERS[a.key];
+      return '<div class="actor" data-type="actor" data-key="' + a.key + '" style="left:' + a.x + '%;top:' + a.y + '%" title="Drag to move · double-click to remove">' +
+        toonMarkup(a.key) +
+        '<div class="actor-name">' + c.name.toUpperCase() + '</div>' +
+        '<div class="actor-bubble"><small>' + c.traits + '</small><span></span></div>' +
+      '</div>';
+    }).join("");
+
+    els.stageProps.innerHTML = state.props.map(p => {
+      const prop = PROPS[p.key];
+      return '<div class="prop-object ' + (prop.css || "") + (p.taken ? " is-taken" : "") + '" data-type="prop" data-key="' + p.key + '" style="left:' + p.x + '%;top:' + p.y + '%" title="Drag to move · double-click to remove">' +
+        '<span>' + prop.icon + '</span><small>' + prop.name.toUpperCase() + '</small></div>';
+    }).join("");
+
+    $$(".actor,.prop-object", els.stage).forEach(bindDrag);
+  }
+
+  function bindDrag(el) {
+    el.addEventListener("pointerdown", event => {
+      if (state.mode === "judge" || state.mode === "example") return;
+      event.preventDefault();
+      const rect = els.stage.getBoundingClientRect();
+      state.dragging = {
+        el,
+        type: el.dataset.type,
+        key: el.dataset.key,
+        rect
+      };
+      el.setPointerCapture?.(event.pointerId);
+    });
+
+    el.addEventListener("pointermove", event => {
+      if (!state.dragging || state.dragging.el !== el) return;
+      const { rect, type, key } = state.dragging;
+      const x = clamp(((event.clientX - rect.left) / rect.width) * 100, 5, 95);
+      const y = clamp(((event.clientY - rect.top) / rect.height) * 100, 12, 92);
+      const obj = type === "actor" ? actorByKey(key) : propByKey(key);
+      if (!obj) return;
+      obj.x = Math.round(x * 10) / 10;
+      obj.y = Math.round(y * 10) / 10;
+      el.style.left = obj.x + "%";
+      el.style.top = obj.y + "%";
+    });
+
+    const end = () => { state.dragging = null; };
+    el.addEventListener("pointerup", end);
+    el.addEventListener("pointercancel", end);
+
+    el.addEventListener("dblclick", () => {
+      if (state.mode === "director" || state.mode === "chaos" || state.mode === "conch") {
+        removeObject(el.dataset.type, el.dataset.key);
+      }
+    });
+  }
+
+  function distance(a, b) {
+    if (!a || !b) return Infinity;
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
+  function hashString(input) {
+    let h = 2166136261;
+    for (let i = 0; i < input.length; i++) {
+      h ^= input.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  function setupSignature(extra = "") {
+    const actors = [...state.actors].sort((a,b) => a.key.localeCompare(b.key))
+      .map(a => a.key + ":" + Math.round(a.x) + "," + Math.round(a.y)).join("|");
+    const props = [...state.props].sort((a,b) => a.key.localeCompare(b.key))
+      .map(p => p.key + ":" + Math.round(p.x) + "," + Math.round(p.y)).join("|");
+    return [state.scene, actors, props, extra].join("::");
+  }
+
+  function actorElement(key) {
+    return $('.actor[data-key="' + key + '"]', els.stage);
+  }
+
+  function propElement(key) {
+    return $('.prop-object[data-key="' + key + '"]', els.stage);
+  }
+
+  function react(key, text, trait) {
+    const el = actorElement(key);
+    if (!el) return;
+    const bubble = $(".actor-bubble", el);
+    if (trait) $("small", bubble).textContent = trait;
+    $("span", bubble).textContent = text;
+    bubble.classList.add("is-on");
+    el.classList.add("react", "focus");
+    speak(text, key);
+    setTimeout(() => {
+      bubble.classList.remove("is-on");
+      el.classList.remove("react", "focus");
+    }, 1350);
+  }
+
+  function moveObject(type, key, x, y, duration = 650) {
+    const obj = type === "actor" ? actorByKey(key) : propByKey(key);
+    const el = type === "actor" ? actorElement(key) : propElement(key);
+    if (!obj || !el) return;
+    obj.x = x;
+    obj.y = y;
+    el.style.transition = "left " + duration + "ms ease, top " + duration + "ms ease";
+    requestAnimationFrame(() => {
+      el.style.left = x + "%";
+      el.style.top = y + "%";
+    });
+    setTimeout(() => { el.style.transition = ""; }, duration + 40);
+  }
+
+  function markPropTaken(key, taken = true) {
+    const prop = propByKey(key);
+    if (!prop) return;
+    prop.taken = taken;
+    const el = propElement(key);
+    if (el) el.classList.toggle("is-taken", taken);
+  }
+
+  function showNarrator(who, why) {
+    els.narrator.innerHTML = '<b>' + who + '</b> <span>' + why + '</span>';
+    els.narrator.classList.add("is-on");
+  }
+
+  function hideNarrator() {
+    els.narrator.classList.remove("is-on");
+  }
+
+  function showBanner(text) {
+    els.stageBanner.textContent = text;
+    els.stageBanner.classList.add("is-on");
+  }
+
+  function hideBanner() {
+    els.stageBanner.classList.remove("is-on");
+  }
+
+  function overlay(text, on = true) {
+    els.judgeOverlay.innerHTML = text.replace(/\n/g, "<br>");
+    els.judgeOverlay.classList.toggle("is-on", on);
+  }
+
+  function voiceAvailable() {
+    return "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+  }
+
+  function speak(text, characterKey) {
+    if (!state.voice || !voiceAvailable()) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voice = CHARACTERS[characterKey]?.voice || { pitch: 1, rate: 1 };
+      utterance.pitch = voice.pitch;
+      utterance.rate = voice.rate;
+      utterance.volume = .82;
+      window.speechSynthesis.speak(utterance);
+      const timeout = setTimeout(() => {
+        if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
+      }, 2800);
+      utterance.onend = () => clearTimeout(timeout);
+      utterance.onerror = () => clearTimeout(timeout);
+    } catch (_) {
+      // Voice is optional. Visual bubbles always remain the source of truth.
+    }
+  }
+
+  function renderTrays() {
+    els.castTray.innerHTML = Object.entries(CHARACTERS).map(([key, c]) =>
+      '<button class="object-card" data-add-actor="' + key + '">' +
+        toonMarkup(key, true) +
+        '<b>' + c.name.toUpperCase() + '</b><small>' + c.traits + '</small>' +
+      '</button>'
+    ).join("");
+
+    els.propTray.innerHTML = Object.entries(PROPS).map(([key, p]) =>
+      '<button class="object-card" data-add-prop="' + key + '">' +
+        '<div class="prop-icon">' + p.icon + '</div><b>' + p.name.toUpperCase() + '</b>' +
+      '</button>'
+    ).join("");
+
+    $$("[data-add-actor]", els.castTray).forEach((btn, i) => btn.addEventListener("click", () => {
+      addActor(btn.dataset.addActor, 18 + (i * 16) % 70, 68 + (i % 2) * 13);
+    }));
+
+    $$("[data-add-prop]", els.propTray).forEach((btn, i) => btn.addEventListener("click", () => {
+      addProp(btn.dataset.addProp, 25 + (i * 13) % 60, 49 + (i % 3) * 12);
+    }));
+  }
+
+  function setModeChrome(mode) {
+    state.mode = mode;
+    const director = mode === "director" || mode === "chaos";
+    const conch = mode === "conch";
+    const judge = mode === "judge";
+    const example = mode === "example";
+
+    els.directorPanel.hidden = !director;
+    els.conchPanel.hidden = !conch;
+    els.sceneToolbar.hidden = judge || example;
+    els.judgeProgress.hidden = !judge;
+    els.compareOverlay.hidden = true;
+
+    if (judge) {
+      els.modeTitle.textContent = "20-SECOND JUDGE DEMO";
+      els.modeSubtitle.textContent = "Watch one variable change the episode.";
+    } else if (director) {
+      els.modeTitle.textContent = mode === "chaos" ? "CHAOS SETUP" : "DIRECTOR MODE";
+      els.modeSubtitle.textContent = "Place the cast. Personalities decide.";
+    } else if (conch) {
+      els.modeTitle.textContent = "MAGIC CONCH EXPERIMENT";
+      els.modeSubtitle.textContent = "Same setup + same question = same answer.";
+    } else if (example) {
+      els.modeTitle.textContent = "PLANKTON’S VERY BAD DAY";
+      els.modeSubtitle.textContent = "A deterministic example episode.";
+    }
+  }
+
+  function openDirector(chaos = false) {
+    state.runToken++;
+    showScreen("play");
+    setModeChrome(chaos ? "chaos" : "director");
+    clearStage();
+    setScene("krusty");
+
+    if (chaos) {
+      addActor("spongebob", 73, 60);
+      addActor("patrick", 18, 76);
+      addActor("squidward", 58, 77);
+      addActor("mrkrabs", 84, 73);
+      addActor("plankton", 25, 56);
+      addProp("formula", 49, 54);
+      addProp("money", 82, 56);
+      addProp("clarinet", 58, 64);
+      addProp("spatula", 70, 48);
+      setChaos(28);
+      showBanner("CHAOS SETUP LOADED — PRESS ACTION");
+      setTimeout(hideBanner, 1800);
+    } else {
+      addActor("spongebob", 70, 61);
+      addActor("plankton", 28, 60);
+      addProp("formula", 50, 54);
+    }
+  }
+
+  function openConch() {
+    state.runToken++;
+    showScreen("play");
+    setModeChrome("conch");
+    clearStage();
+    setScene("house");
+    addActor("spongebob", 66, 65);
+    addActor("patrick", 27, 73);
+    addActor("squidward", 84, 73);
+    addProp("conch", 50, 54);
+    els.conchAnswer.textContent = "The Magic Conch is listening…";
+    setChaos(10);
+  }
+
+  function directorSimulation() {
+    const has = key => !!actorByKey(key);
+    const prop = key => !!propByKey(key);
+    const events = [];
+    let outcome = "THE EPISODE STAYS CALM";
+    let chaos = 12;
+    let cause = [];
+
+    const plankton = actorByKey("plankton");
+    const sponge = actorByKey("spongebob");
+    const mrkrabs = actorByKey("mrkrabs");
+    const patrick = actorByKey("patrick");
+    const squidward = actorByKey("squidward");
+    const formula = propByKey("formula");
+    const money = propByKey("money");
+    const clarinet = propByKey("clarinet");
+    const jellyfish = propByKey("jellyfish");
+
+    const moneyDistraction = money && ((mrkrabs && distance(mrkrabs, money) < 42) || (patrick && distance(patrick, money) < 42));
+
+    if (plankton && formula) {
+      events.push({ actor: "plankton", text: "Formula detected.", trait: "FORMULA-OBSESSED", target: "formula", chaos: 18 });
+      cause.push("📜 Formula exists", "→", "🦠 Plankton targets it");
+      chaos += 18;
+
+      if (moneyDistraction && mrkrabs && patrick) {
+        events.push({ actor: "patrick", text: "Ooooh… money.", trait: "IMPULSIVE", target: "money", chaos: 12 });
+        events.push({ actor: "mrkrabs", text: "MONEY?!", trait: "MONEY > EVERYTHING", target: "money", chaos: 17 });
+        if (sponge) events.push({ actor: "spongebob", text: "Mr. Krabs?", trait: "HELPFUL · DISTRACTIBLE", target: "money", chaos: 8 });
+        events.push({ actor: "plankton", text: "Perfect distraction.", trait: "SCHEMING", target: "formula", chaos: 24, takes: "formula" });
+        outcome = "PLANKTON STEALS THE FORMULA";
+        cause.push("→", "💵 Money distracts the room", "→", "📜 Formula stolen");
+        chaos += 34;
+      } else if (sponge && distance(sponge, formula) < 40) {
+        events.push({ actor: "spongebob", text: "Protect the formula!", trait: "LOYAL · PROTECTIVE", target: "formula", chaos: 12 });
+        if (mrkrabs) events.push({ actor: "mrkrabs", text: "Nobody touches me formula!", trait: "PROTECTIVE", target: "formula", chaos: 10 });
+        outcome = "THE FORMULA IS SAFE";
+        cause.push("→", "🧽 SpongeBob protects it", "→", "✅ Formula safe");
+        chaos += 12;
+      } else {
+        events.push({ actor: "plankton", text: "Too easy.", trait: "SCHEMING", target: "formula", chaos: 25, takes: "formula" });
+        outcome = "PLANKTON STEALS THE FORMULA";
+        cause.push("→", "🚫 Nobody is close enough", "→", "📜 Formula stolen");
+        chaos += 25;
+      }
+    }
+
+    if (squidward && clarinet && distance(squidward, clarinet) < 42) {
+      events.push({ actor: "squidward", text: "Not my clarinet!", trait: "PROTECTS HIS CLARINET", target: "clarinet", chaos: 8 });
+      if (outcome === "THE EPISODE STAYS CALM") outcome = "SQUIDWARD PROTECTS HIS CLARINET";
+      chaos += 8;
+    }
+
+    if (state.scene === "fields" && jellyfish) {
+      if (patrick) events.push({ actor: "patrick", text: "Jellyfish!", trait: "CURIOUS", target: "jellyfish", chaos: 10 });
+      if (sponge) events.push({ actor: "spongebob", text: "Let’s go jellyfishing!", trait: "ENTHUSIASTIC", target: "jellyfish", chaos: 7 });
+      if (outcome === "THE EPISODE STAYS CALM") outcome = "JELLYFISHING TAKES OVER THE EPISODE";
+      chaos += 15;
+    }
+
+    if (prop("spatula") && has("spongebob") && state.scene === "krusty") {
+      events.push({ actor: "spongebob", text: "Order up!", trait: "LOVES HIS JOB", target: "spatula", chaos: -4 });
+      chaos = Math.max(5, chaos - 4);
+      if (outcome === "THE EPISODE STAYS CALM") outcome = "SPONGEBOB SAVES THE LUNCH RUSH";
+    }
+
+    if (!events.length) {
+      const first = state.actors[0];
+      if (first) events.push({ actor: first.key, text: "Nothing to react to… yet.", trait: CHARACTERS[first.key].traits, chaos: 2 });
+      cause = ["🎬 Setup", "→", "😌 No strong trigger", "→", "🌊 Low chaos"];
+    }
+
+    return { outcome, events, cause, chaos: clamp(chaos, 4, 100) };
+  }
+
+  async function runDirectorSimulation() {
+    const token = ++state.runToken;
+    hideResult();
+    hideBanner();
+    state.props.forEach(p => p.taken = false);
+    renderStage();
+
+    const result = directorSimulation();
+    setChaos(12);
+    showBanner("ACTION — PERSONALITY RULES ARE LIVE");
+    await sleep(650);
+    if (token !== state.runToken) return;
+    hideBanner();
+
+    for (const event of result.events) {
+      if (token !== state.runToken) return;
+      const target = event.target && propByKey(event.target);
+      const actor = actorByKey(event.actor);
+      if (target && actor) {
+        const side = actor.x <= target.x ? -8 : 8;
+        moveObject("actor", event.actor, clamp(target.x + side, 7, 93), clamp(target.y + 10, 18, 90), 520);
+      }
+      react(event.actor, event.text, event.trait);
+      showNarrator(CHARACTERS[event.actor]?.name || "Narrator", "because " + event.trait.toLowerCase() + ".");
+      setChaos(state.chaos + (event.chaos || 5));
+      await sleep(1000);
+      if (event.takes) markPropTaken(event.takes, true);
+    }
+
+    if (token !== state.runToken) return;
+    hideNarrator();
+    showResult(result);
+  }
+
+  function showResult(result) {
+    els.resultHeadline.textContent = result.outcome;
+    els.eventTimeline.innerHTML = result.events.map((e, i) =>
+      '<li><b>' + (i + 1) + '.</b> ' + (CHARACTERS[e.actor]?.name || "Scene") + ': “' + e.text + '”</li>'
+    ).join("");
+
+    const cause = result.cause.length ? result.cause : ["🎬 Setup", "→", "🧠 Personality rules", "→", "🎞️ Outcome"];
+    els.causeFlow.innerHTML = cause.map((item, i) => {
+      if (item === "→") return '<div class="cause-arrow">→</div>';
+      const cls = i === 0 ? " trigger" : (i === cause.length - 1 ? (result.outcome.includes("STOLEN") ? " bad" : " good") : "");
+      return '<div class="cause-node' + cls + '">' + item + '</div>';
+    }).join("");
+    els.resultDock.hidden = false;
+    setChaos(result.chaos);
+    els.resultDock.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function hideResult() {
+    els.resultDock.hidden = true;
+  }
+
+  function setupJudgeRound(includeMoney) {
+    clearStage();
+    setScene("krusty");
+    addActor("plankton", 26, 61);
+    addActor("spongebob", 70, 62);
+    addActor("patrick", 17, 80);
+    addActor("mrkrabs", 84, 78);
+    addProp("formula", 49, 54);
+    if (includeMoney) addProp("money", 81, 58);
+  }
+
+  async function judgeEvent(token, event, progress) {
+    if (token !== state.runToken) return false;
+    if (event.target) {
+      const target = propByKey(event.target);
+      const actor = actorByKey(event.actor);
+      if (target && actor) {
+        const side = actor.x <= target.x ? -8 : 8;
+        moveObject("actor", event.actor, clamp(target.x + side, 8, 92), clamp(target.y + 10, 20, 90), 530);
+      }
+    }
+    react(event.actor, event.text, event.trait);
+    showNarrator(CHARACTERS[event.actor].name, event.why);
+    setChaos(event.chaos);
+    els.judgeProgressFill.style.width = progress + "%";
+    await sleep(1050);
+    if (event.takes) markPropTaken(event.takes, true);
+    return token === state.runToken;
+  }
+
+  async function openJudge() {
+    const token = ++state.runToken;
+    showScreen("play");
+    setModeChrome("judge");
+    setScene("krusty");
+    els.judgeProgress.hidden = false;
+    els.judgeProgressFill.style.width = "0%";
+    els.compareOverlay.hidden = true;
+
+    setupJudgeRound(false);
+    setChaos(8);
+    els.judgeRoundLabel.textContent = "ROUND 1";
+    els.judgeProgressText.textContent = "Original setup";
+    overlay("ROUND 1\nORIGINAL SETUP");
+    await sleep(900);
+    if (token !== state.runToken) return;
+    overlay("", false);
+
+    const round1 = [
+      { actor:"plankton", text:"Formula detected.", trait:"FORMULA-OBSESSED", why:"Plankton always targets the formula.", target:"formula", chaos:25 },
+      { actor:"spongebob", text:"Protect the formula!", trait:"LOYAL · PROTECTIVE", why:"SpongeBob reacts to protect what he cares about.", target:"formula", chaos:34 },
+      { actor:"mrkrabs", text:"Nobody touches me formula!", trait:"PROTECTIVE", why:"Mr. Krabs protects the restaurant.", target:"formula", chaos:38 },
+      { actor:"patrick", text:"I’ll just watch.", trait:"CURIOUS", why:"Nothing in this setup strongly tempts Patrick.", chaos:36 }
+    ];
+
+    for (let i = 0; i < round1.length; i++) {
+      const ok = await judgeEvent(token, round1[i], 8 + (i + 1) * 9);
+      if (!ok) return;
+    }
+
+    hideNarrator();
+    showBanner("ROUND 1 OUTCOME: ✅ FORMULA SAFE");
+    els.judgeProgressFill.style.width = "48%";
+    await sleep(950);
+    if (token !== state.runToken) return;
+    hideBanner();
+
+    overlay("🦋 CHANGE ONE THING");
+    els.butterflyFx.classList.add("is-on");
+    els.changeBadge.innerHTML = "ADD<br><span style=\"font-size:34px\">💵</span> MONEY";
+    els.changeBadge.classList.add("is-on");
+    await sleep(950);
+    if (token !== state.runToken) return;
+
+    setupJudgeRound(true);
+    els.changeBadge.classList.remove("is-on");
+    els.butterflyFx.classList.remove("is-on");
+    overlay("", false);
+    els.judgeRoundLabel.textContent = "ROUND 2";
+    els.judgeProgressText.textContent = "Same setup + 💵 MONEY";
+    els.judgeProgressFill.style.width = "55%";
+    showBanner("SAME CHARACTERS · SAME SCENE · + 💵 MONEY");
+    await sleep(850);
+    if (token !== state.runToken) return;
+    hideBanner();
+
+    const round2 = [
+      { actor:"patrick", text:"Ooooh… money.", trait:"IMPULSIVE", why:"Money becomes Patrick’s strongest new stimulus.", target:"money", chaos:48 },
+      { actor:"mrkrabs", text:"MONEY?!", trait:"MONEY > EVERYTHING", why:"Mr. Krabs immediately prioritizes money.", target:"money", chaos:61 },
+      { actor:"spongebob", text:"Mr. Krabs?", trait:"HELPFUL · DISTRACTIBLE", why:"SpongeBob follows the new commotion.", target:"money", chaos:70 },
+      { actor:"plankton", text:"Perfect distraction.", trait:"SCHEMING", why:"Plankton exploits the opening created by everyone else.", target:"formula", chaos:88, takes:"formula" }
+    ];
+
+    for (let i = 0; i < round2.length; i++) {
+      const ok = await judgeEvent(token, round2[i], 61 + (i + 1) * 9);
+      if (!ok) return;
+    }
+
+    hideNarrator();
+    showBanner("ROUND 2 OUTCOME: ❌ PLANKTON STEALS THE FORMULA");
+    els.judgeProgressFill.style.width = "100%";
+    await sleep(1000);
+    if (token !== state.runToken) return;
+    hideBanner();
+
+    els.roundOneOutcome.textContent = "✅ FORMULA SAFE";
+    els.roundTwoOutcome.textContent = "❌ FORMULA STOLEN";
+    els.roundOneEvents.innerHTML = [
+      "Plankton targets formula",
+      "SpongeBob protects it",
+      "Mr. Krabs guards the restaurant",
+      "Patrick has no stronger trigger"
+    ].map(x => "<li>" + x + "</li>").join("");
+    els.roundTwoEvents.innerHTML = [
+      "Patrick notices money",
+      "Mr. Krabs abandons the formula for money",
+      "SpongeBob follows the commotion",
+      "Plankton uses the distraction"
+    ].map(x => "<li>" + x + "</li>").join("");
+    els.compareOverlay.hidden = false;
+  }
+
+  async function openExample() {
+    const token = ++state.runToken;
+    showScreen("play");
+    setModeChrome("example");
+    clearStage();
+    setScene("krusty");
+    addActor("plankton", 23, 62);
+    addActor("spongebob", 71, 62);
+    addActor("mrkrabs", 85, 76);
+    addProp("formula", 50, 53);
+    addProp("spatula", 69, 48);
+    setChaos(18);
+
+    overlay("🎬 PLANKTON’S VERY BAD DAY");
+    await sleep(850);
+    if (token !== state.runToken) return;
+    overlay("", false);
+
+    const events = [
+      { actor:"plankton", text:"Today is the day!", trait:"SCHEMING", why:"Plankton cannot resist the formula.", target:"formula", chaos:30 },
+      { actor:"spongebob", text:"Not on my shift!", trait:"LOYAL", why:"SpongeBob protects the Krusty Krab.", target:"formula", chaos:44 },
+      { actor:"mrkrabs", text:"Get away from me formula!", trait:"PROTECTIVE", why:"Mr. Krabs protects the business.", target:"formula", chaos:56 },
+      { actor:"plankton", text:"I hate this restaurant.", trait:"STUBBORN", why:"The same motivations reliably produce the same defeat.", chaos:42 }
+    ];
+
+    for (const e of events) {
+      if (token !== state.runToken) return;
+      await judgeEvent(token, e, 0);
+    }
+    hideNarrator();
+    showBanner("OUTCOME: PLANKTON FAILS. AGAIN.");
+    await sleep(1100);
+    if (token === state.runToken) hideBanner();
+  }
+
+  function askConch() {
+    if (state.mode !== "conch") return;
+    const question = (els.conchQuestion.value || "Should we do it?").trim();
+    const answers = [
+      "No.",
+      "Yes.",
+      "Maybe someday.",
+      "Ask again when the chaos is lower.",
+      "The shell says: absolutely not.",
+      "The shell approves.",
+      "Nothing."
+    ];
+    const index = hashString(setupSignature(question.toLowerCase())) % answers.length;
+    const answer = answers[index];
+    els.conchAnswer.textContent = "🐚 “" + answer + "”";
+    const conch = propElement("conch");
+    if (conch) {
+      conch.classList.remove("magic-conch");
+      void conch.offsetWidth;
+      conch.classList.add("magic-conch");
+    }
+    speak(answer, "squidward");
+    showNarrator("MAGIC CONCH", "same setup + same question = same answer.");
+    setChaos(12 + index * 4);
+    setTimeout(hideNarrator, 1600);
+  }
+
+  function toggleVoice() {
+    state.voice = !state.voice;
+    if (!voiceAvailable()) state.voice = false;
+    els.voiceBtn.innerHTML = (state.voice ? "🔊 <span>VOICE ON</span>" : "🔇 <span>MUTED</span>");
+    if (state.voice) speak("Voices on.", "spongebob");
+  }
+
+  function goHome() {
+    state.runToken++;
+    if (voiceAvailable()) window.speechSynthesis.cancel();
+    els.compareOverlay.hidden = true;
+    els.judgeOverlay.classList.remove("is-on");
+    els.butterflyFx.classList.remove("is-on");
+    els.changeBadge.classList.remove("is-on");
+    hideNarrator();
+    hideBanner();
+    showScreen("home");
+    state.mode = "home";
+  }
+
+  function bindUI() {
+    $("#btnJudge").addEventListener("click", openJudge);
+    $("#btnDirector").addEventListener("click", () => openDirector(false));
+    $("#btnChaos").addEventListener("click", () => openDirector(true));
+    $("#btnConch").addEventListener("click", openConch);
+    $("#btnExample").addEventListener("click", openExample);
+    $("#btnHome").addEventListener("click", goHome);
+    $("#btnVoice").addEventListener("click", toggleVoice);
+    $("#btnAction").addEventListener("click", runDirectorSimulation);
+    $("#btnReset").addEventListener("click", () => openDirector(state.mode === "chaos"));
+    $("#btnCloseResult").addEventListener("click", hideResult);
+    $("#btnAskConch").addEventListener("click", askConch);
+    els.conchQuestion.addEventListener("keydown", event => {
+      if (event.key === "Enter") askConch();
+    });
+
+    $("#btnReplayJudge").addEventListener("click", openJudge);
+    $("#btnOpenDirectorFromCompare").addEventListener("click", () => openDirector(false));
+    $("#btnCompareHome").addEventListener("click", goHome);
+
+    $$(".scene-chip").forEach(btn => btn.addEventListener("click", () => setScene(btn.dataset.scene)));
+  }
+
+  renderTrays();
+  bindUI();
+  setChaos(8);
+  setScene("krusty");
+})();
