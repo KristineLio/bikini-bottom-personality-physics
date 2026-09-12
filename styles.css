@@ -378,3 +378,12 @@ h1 span{color:var(--yellow)}
   .counter-art{left:10%;right:24%}
   .compare-card{padding:14px;border-radius:20px}
 }
+
+/* V2.1 character art upgrade */
+.toon{background-size:contain!important;background-repeat:no-repeat!important;background-position:center!important;border:0!important;clip-path:none!important}
+.toon:before,.toon:after,.toon span{display:none!important}
+.toon-spongebob{background-image:url("assets/characters/spongebob.svg")!important}
+.toon-patrick{background-image:url("assets/characters/patrick.svg")!important}
+.toon-squidward{background-image:url("assets/characters/squidward.svg")!important}
+.toon-mrkrabs{background-image:url("assets/characters/mr-krabs.svg")!important}
+.toon-plankton{background-image:url("assets/characters/plankton.svg")!important}
