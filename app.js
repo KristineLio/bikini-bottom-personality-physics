@@ -157,7 +157,7 @@
       renderStage();
       return existing;
     }
-    const obj = { id: "actor-" + key, key, x, y };
+    const obj = { id: "actor-" + key, key, x, y, carry: null };
     state.actors.push(obj);
     renderStage();
     return obj;
@@ -189,6 +189,7 @@
       const c = CHARACTERS[a.key];
       return '<div class="actor" data-type="actor" data-key="' + a.key + '" style="left:' + a.x + '%;top:' + a.y + '%" title="Drag to move · double-click to remove">' +
         toonMarkup(a.key) +
+        '<div class="actor-carry' + (a.carry ? " is-on" : "") + '" aria-hidden="true">' + (a.carry ? (PROPS[a.carry]?.icon || "") : "") + '</div>' +
         '<div class="actor-name">' + c.name.toUpperCase() + '</div>' +
         '<div class="actor-bubble"><small>' + c.traits + '</small><span></span></div>' +
       '</div>';
@@ -289,23 +290,69 @@
   function moveObject(type, key, x, y, duration = 650) {
     const obj = type === "actor" ? actorByKey(key) : propByKey(key);
     const el = type === "actor" ? actorElement(key) : propElement(key);
-    if (!obj || !el) return;
+    if (!obj || !el) return Promise.resolve();
+
+    const dx = x - obj.x;
+    if (type === "actor") {
+      el.classList.toggle("is-facing-left", dx < -1);
+      el.classList.toggle("is-facing-right", dx >= -1);
+      el.classList.add("is-walking");
+    }
+
     obj.x = x;
     obj.y = y;
-    el.style.transition = "left " + duration + "ms ease, top " + duration + "ms ease";
+    el.style.transition = "left " + duration + "ms cubic-bezier(.2,.8,.2,1), top " + duration + "ms cubic-bezier(.2,.8,.2,1)";
     requestAnimationFrame(() => {
       el.style.left = x + "%";
       el.style.top = y + "%";
     });
-    setTimeout(() => { el.style.transition = ""; }, duration + 40);
+
+    return new Promise(resolve => {
+      setTimeout(() => {
+        el.style.transition = "";
+        el.classList.remove("is-walking");
+        resolve();
+      }, duration + 40);
+    });
   }
 
-  function markPropTaken(key, taken = true) {
+  async function walkActorTo(key, x, y, duration = 650) {
+    const el = actorElement(key);
+    if (!el) return;
+    el.classList.add("anticipate");
+    await sleep(120);
+    el.classList.remove("anticipate");
+    await moveObject("actor", key, x, y, duration);
+  }
+
+  function setCarry(actorKey, propKey) {
+    const actor = actorByKey(actorKey);
+    if (!actor) return;
+    actor.carry = propKey || null;
+    const el = actorElement(actorKey);
+    if (!el) return;
+    const carry = $(".actor-carry", el);
+    if (carry) {
+      carry.textContent = propKey ? (PROPS[propKey]?.icon || "") : "";
+      carry.classList.toggle("is-on", !!propKey);
+    }
+  }
+
+  function clearCarries() {
+    state.actors.forEach(actor => actor.carry = null);
+    $$(".actor-carry", els.stage).forEach(el => {
+      el.textContent = "";
+      el.classList.remove("is-on");
+    });
+  }
+
+  function markPropTaken(key, taken = true, carrierKey = null) {
     const prop = propByKey(key);
     if (!prop) return;
     prop.taken = taken;
     const el = propElement(key);
     if (el) el.classList.toggle("is-taken", taken);
+    if (carrierKey) setCarry(carrierKey, taken ? key : null);
   }
 
   function showNarrator(who, why) {
@@ -474,7 +521,7 @@
 
       if (moneyDistraction && mrkrabs && patrick) {
         events.push({ actor: "patrick", text: "Ooooh… money.", trait: "IMPULSIVE", target: "money", chaos: 12 });
-        events.push({ actor: "mrkrabs", text: "MONEY?!", trait: "MONEY > EVERYTHING", target: "money", chaos: 17 });
+        events.push({ actor: "mrkrabs", text: "MONEY?!", trait: "MONEY > EVERYTHING", target: "money", chaos: 17, grabs: "money" });
         if (sponge) events.push({ actor: "spongebob", text: "Mr. Krabs?", trait: "HELPFUL · DISTRACTIBLE", target: "money", chaos: 8 });
         events.push({ actor: "plankton", text: "Perfect distraction.", trait: "SCHEMING", target: "formula", chaos: 24, takes: "formula" });
         outcome = "PLANKTON STEALS THE FORMULA";
@@ -527,6 +574,7 @@
     hideResult();
     hideBanner();
     state.props.forEach(p => p.taken = false);
+    state.actors.forEach(a => a.carry = null);
     renderStage();
 
     const result = directorSimulation();
@@ -542,13 +590,18 @@
       const actor = actorByKey(event.actor);
       if (target && actor) {
         const side = actor.x <= target.x ? -8 : 8;
-        moveObject("actor", event.actor, clamp(target.x + side, 7, 93), clamp(target.y + 10, 18, 90), 520);
+        await walkActorTo(event.actor, clamp(target.x + side, 7, 93), clamp(target.y + 10, 18, 90), 520);
       }
       react(event.actor, event.text, event.trait);
       showNarrator(CHARACTERS[event.actor]?.name || "Narrator", "because " + event.trait.toLowerCase() + ".");
       setChaos(state.chaos + (event.chaos || 5));
       await sleep(1000);
-      if (event.takes) markPropTaken(event.takes, true);
+      if (event.grabs) markPropTaken(event.grabs, true, event.actor);
+      if (event.takes) {
+        markPropTaken(event.takes, true, event.actor);
+        const thief = actorByKey(event.actor);
+        if (thief) await walkActorTo(event.actor, clamp(thief.x - 22, 8, 92), clamp(thief.y + 6, 18, 90), 520);
+      }
     }
 
     if (token !== state.runToken) return;
@@ -595,7 +648,7 @@
       const actor = actorByKey(event.actor);
       if (target && actor) {
         const side = actor.x <= target.x ? -8 : 8;
-        moveObject("actor", event.actor, clamp(target.x + side, 8, 92), clamp(target.y + 10, 20, 90), 530);
+        await walkActorTo(event.actor, clamp(target.x + side, 8, 92), clamp(target.y + 10, 20, 90), 530);
       }
     }
     react(event.actor, event.text, event.trait);
@@ -603,7 +656,12 @@
     setChaos(event.chaos);
     els.judgeProgressFill.style.width = progress + "%";
     await sleep(1050);
-    if (event.takes) markPropTaken(event.takes, true);
+    if (event.grabs) markPropTaken(event.grabs, true, event.actor);
+      if (event.takes) {
+        markPropTaken(event.takes, true, event.actor);
+        const thief = actorByKey(event.actor);
+        if (thief) await walkActorTo(event.actor, clamp(thief.x - 22, 8, 92), clamp(thief.y + 6, 18, 90), 520);
+      }
     return token === state.runToken;
   }
 
@@ -665,7 +723,7 @@
 
     const round2 = [
       { actor:"patrick", text:"Ooooh… money.", trait:"IMPULSIVE", why:"Money becomes Patrick’s strongest new stimulus.", target:"money", chaos:48 },
-      { actor:"mrkrabs", text:"MONEY?!", trait:"MONEY > EVERYTHING", why:"Mr. Krabs immediately prioritizes money.", target:"money", chaos:61 },
+      { actor:"mrkrabs", text:"MONEY?!", trait:"MONEY > EVERYTHING", why:"Mr. Krabs immediately prioritizes money.", target:"money", chaos:61, grabs:"money" },
       { actor:"spongebob", text:"Mr. Krabs?", trait:"HELPFUL · DISTRACTIBLE", why:"SpongeBob follows the new commotion.", target:"money", chaos:70 },
       { actor:"plankton", text:"Perfect distraction.", trait:"SCHEMING", why:"Plankton exploits the opening created by everyone else.", target:"formula", chaos:88, takes:"formula" }
     ];
