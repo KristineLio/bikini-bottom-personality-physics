@@ -227,7 +227,7 @@
   function renderStage() {
     els.stageActors.innerHTML = state.actors.map(a => {
       const c = CHARACTERS[a.key];
-      return '<div class="actor" data-type="actor" data-key="' + a.key + '" style="left:' + a.x + '%;top:' + a.y + '%;z-index:' + (20 + Math.round(a.y)) + '" title="Drag to move · double-click to remove">' +
+      return '<div class="actor" data-type="actor" data-key="' + a.key + '" style="left:' + a.x + '%;top:' + a.y + '%;z-index:' + (6 + Math.round(a.y / 15)) + '" title="Drag to move · double-click to remove">' +
         toonMarkup(a.key) +
         '<div class="actor-carry' + (a.carry ? " is-on" : "") + '" aria-hidden="true">' + (a.carry ? (PROPS[a.carry]?.icon || "") : "") + '</div>' +
         '<div class="actor-name">' + c.name.toUpperCase() + '</div>' +
@@ -237,7 +237,7 @@
 
     els.stageProps.innerHTML = state.props.map(p => {
       const prop = PROPS[p.key];
-      return '<div class="prop-object ' + (prop.css || "") + (p.taken ? " is-taken" : "") + '" data-type="prop" data-key="' + p.key + '" style="left:' + p.x + '%;top:' + p.y + '%;z-index:' + (18 + Math.round(p.y)) + '" title="Drag to move · double-click to remove">' +
+      return '<div class="prop-object ' + (prop.css || "") + (p.taken ? " is-taken" : "") + '" data-type="prop" data-key="' + p.key + '" style="left:' + p.x + '%;top:' + p.y + '%;z-index:' + (5 + Math.round(p.y / 15)) + '" title="Drag to move · double-click to remove">' +
         '<span>' + prop.icon + '</span><small>' + prop.name.toUpperCase() + '</small></div>';
     }).join("");
 
@@ -269,7 +269,7 @@
       obj.y = Math.round(y * 10) / 10;
       el.style.left = obj.x + "%";
       el.style.top = obj.y + "%";
-      el.style.zIndex = String((type === "actor" ? 20 : 18) + Math.round(obj.y));
+      el.style.zIndex = String((type === "actor" ? 6 : 5) + Math.round(obj.y / 15));
     });
 
     const end = () => { state.dragging = null; };
@@ -403,7 +403,7 @@
 
     obj.x = x;
     obj.y = y;
-    el.style.zIndex = String((type === "actor" ? 20 : 18) + Math.round(y));
+    el.style.zIndex = String((type === "actor" ? 6 : 5) + Math.round(y / 15));
     el.style.transition = "left " + duration + "ms cubic-bezier(.2,.8,.2,1), top " + duration + "ms cubic-bezier(.2,.8,.2,1)";
     requestAnimationFrame(() => {
       el.style.left = x + "%";
