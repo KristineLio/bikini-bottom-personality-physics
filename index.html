@@ -34,19 +34,21 @@
             <span>🦋 CHANGE ONE THING = NEW CHAIN REACTION</span>
           </div>
 
-          <div class="hero-cta">
-            <button id="btnJudge" class="btn btn-primary btn-judge">
-              <span class="btn-kicker">START HERE</span>
-              ⚡ PLAY THE 20-SECOND JUDGE DEMO
+          <div class="hero-cta judge-path">
+            <button id="btnJudge" class="btn btn-primary btn-judge" aria-label="Play the 20-second judge demo">
+              <span class="btn-kicker">THE FASTEST WAY TO GET IT</span>
+              <span class="judge-cta-label">⚡ PLAY THE 20-SECOND DEMO</span>
+              <span class="judge-cta-sub">One setup. One tiny change. A completely different episode.</span>
             </button>
-            <div class="secondary-modes">
-              <button id="btnChaos" class="btn btn-ghost">🎲 Chaos Setup</button>
-              <button id="btnDirector" class="btn btn-ghost">🎥 Director Mode</button>
-              <button id="btnConch" class="btn btn-ghost">🐚 Magic Conch</button>
+            <div class="secondary-label">OR EXPLORE YOURSELF</div>
+            <div class="secondary-modes" aria-label="Other modes">
+              <button id="btnChaos" class="mode-link">Chaos Setup</button>
+              <span aria-hidden="true">·</span>
+              <button id="btnDirector" class="mode-link">Director Mode</button>
+              <span aria-hidden="true">·</span>
+              <button id="btnConch" class="mode-link">Magic Conch</button>
             </div>
           </div>
-
-          <button id="btnExample" class="example-link">🎬 Example episode: Plankton’s Very Bad Day →</button>
         </div>
 
         <div class="hero-world" aria-label="Character motivations">
@@ -110,6 +112,23 @@
           <div><b>PLANKTON</b><small>FORMULA-OBSESSED · SCHEMING</small></div>
         </article>
       </div>
+
+      <section class="example-episode-card" aria-label="Example episode">
+        <div class="example-episode-art" aria-hidden="true">
+          <div class="example-mini-stage">
+            <div class="toon toon-plankton"><span></span></div>
+            <span class="example-arrow">→</span>
+            <span class="example-formula">📜</span>
+            <span class="example-impact">💥</span>
+          </div>
+        </div>
+        <div class="example-episode-copy">
+          <span class="example-kicker">EXAMPLE EPISODE</span>
+          <h2>Plankton’s Very Bad Day</h2>
+          <p>Want a longer story after the 20-second experiment? Watch one deterministic episode play out from start to finish.</p>
+        </div>
+        <button id="btnExample" class="btn btn-light example-episode-button">🎬 WATCH EXAMPLE</button>
+      </section>
     </section>
 
     <section id="play" class="screen screen-play" aria-label="Simulation">
