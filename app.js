@@ -91,6 +91,13 @@
     changeBadge: $("#changeBadge"),
     narrator: $("#narrator"),
     stageBanner: $("#stageBanner"),
+    physicsLayer: $("#physicsLayer"),
+    physicsActor: $("#physicsActor"),
+    physicsRule: $("#physicsRule"),
+    physicsInput: $("#physicsInput"),
+    physicsRuleShort: $("#physicsRuleShort"),
+    physicsAction: $("#physicsAction"),
+    physicsConsequence: $("#physicsConsequence"),
     judgeProgress: $("#judgeProgress"),
     judgeRoundLabel: $("#judgeRoundLabel"),
     judgeProgressText: $("#judgeProgressText"),
@@ -137,6 +144,7 @@
     hideResult();
     hideNarrator();
     hideBanner();
+    hidePhysics();
     setChaos(8);
   }
 
@@ -353,6 +361,139 @@
     const el = propElement(key);
     if (el) el.classList.toggle("is-taken", taken);
     if (carrierKey) setCarry(carrierKey, taken ? key : null);
+  }
+
+  function physicsForEvent(event) {
+    const actor = event.actor;
+    const target = event.target || "";
+    const text = (event.text || "").toLowerCase();
+
+    if (actor === "plankton" && target === "formula") {
+      return {
+        actor: "PLANKTON",
+        rule: "formula_obsession = HIGH",
+        input: "📜 Formula visible",
+        ruleShort: "Prioritize formula",
+        action: event.takes ? "Take formula" : "Move toward formula",
+        consequence: event.takes ? "Formula ownership changes" : "Defense is triggered"
+      };
+    }
+
+    if (actor === "mrkrabs" && target === "money") {
+      return {
+        actor: "MR. KRABS",
+        rule: "money_priority > formula_priority",
+        input: "💵 Money appears",
+        ruleShort: "Money outranks defense",
+        action: event.grabs ? "Grab money" : "Move toward money",
+        consequence: "Formula loses a defender"
+      };
+    }
+
+    if (actor === "mrkrabs" && target === "formula") {
+      return {
+        actor: "MR. KRABS",
+        rule: "business_protection = HIGH",
+        input: "📜 Formula threatened",
+        ruleShort: "Protect business asset",
+        action: "Guard formula",
+        consequence: "Plankton is blocked"
+      };
+    }
+
+    if (actor === "spongebob" && target === "formula") {
+      return {
+        actor: "SPONGEBOB",
+        rule: "protect + follow_authority",
+        input: "📜 Formula threatened",
+        ruleShort: "Loyalty activates",
+        action: "Protect formula",
+        consequence: "Formula stays defended"
+      };
+    }
+
+    if (actor === "spongebob" && target === "money") {
+      return {
+        actor: "SPONGEBOB",
+        rule: "helpfulness + follow_authority",
+        input: "🦀 Mr. Krabs reacts",
+        ruleShort: "Follow authority signal",
+        action: "Follow the commotion",
+        consequence: "Formula defense weakens"
+      };
+    }
+
+    if (actor === "patrick" && target === "money") {
+      return {
+        actor: "PATRICK",
+        rule: "novelty_drive = HIGH; impulse_control = LOW",
+        input: "💵 Money appears",
+        ruleShort: "Strongest novelty wins",
+        action: "Approach money",
+        consequence: "Room attention shifts"
+      };
+    }
+
+    if (actor === "squidward" && target === "clarinet") {
+      return {
+        actor: "SQUIDWARD",
+        rule: "clarinet_protection = HIGH",
+        input: "🎵 Clarinet threatened",
+        ruleShort: "Protect clarinet",
+        action: "Move to clarinet",
+        consequence: "Squidward ignores other chaos"
+      };
+    }
+
+    if (actor === "spongebob" && target === "spatula") {
+      return {
+        actor: "SPONGEBOB",
+        rule: "work_instinct = HIGH",
+        input: "🍳 Spatula available",
+        ruleShort: "Work cue activates",
+        action: "Return to work",
+        consequence: "Chaos decreases"
+      };
+    }
+
+    if (target === "jellyfish") {
+      return {
+        actor: (CHARACTERS[actor]?.name || actor).toUpperCase(),
+        rule: "curiosity > current_task",
+        input: "🪼 Jellyfish nearby",
+        ruleShort: "Curiosity wins",
+        action: "Approach jellyfish",
+        consequence: "Episode focus changes"
+      };
+    }
+
+    return {
+      actor: (CHARACTERS[actor]?.name || "CHARACTER").toUpperCase(),
+      rule: (event.trait || "personality_rule").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") + " = ACTIVE",
+      input: target ? ((PROPS[target]?.icon || "🎬") + " " + (PROPS[target]?.name || "Stimulus")) : "🎬 Current scene state",
+      ruleShort: event.trait || "Personality reacts",
+      action: event.text || "React",
+      consequence: text.includes("nothing") ? "No state change" : "World state updates"
+    };
+  }
+
+  function showPhysics(event) {
+    if (!els.physicsLayer || !event) return;
+    const p = physicsForEvent(event);
+    els.physicsActor.textContent = p.actor;
+    els.physicsRule.textContent = p.rule;
+    els.physicsInput.textContent = p.input;
+    els.physicsRuleShort.textContent = p.ruleShort;
+    els.physicsAction.textContent = p.action;
+    els.physicsConsequence.textContent = p.consequence;
+    els.physicsLayer.classList.remove("physics-pulse");
+    void els.physicsLayer.offsetWidth;
+    els.physicsLayer.classList.add("is-on", "physics-pulse");
+  }
+
+  function hidePhysics() {
+    if (!els.physicsLayer) return;
+    els.physicsLayer.classList.remove("is-on", "physics-pulse");
   }
 
   function showNarrator(who, why) {
@@ -586,6 +727,7 @@
 
     for (const event of result.events) {
       if (token !== state.runToken) return;
+      showPhysics(event);
       const target = event.target && propByKey(event.target);
       const actor = actorByKey(event.actor);
       if (target && actor) {
@@ -606,6 +748,7 @@
 
     if (token !== state.runToken) return;
     hideNarrator();
+    hidePhysics();
     showResult(result);
   }
 
@@ -643,6 +786,7 @@
 
   async function judgeEvent(token, event, progress) {
     if (token !== state.runToken) return false;
+    showPhysics(event);
     if (event.target) {
       const target = propByKey(event.target);
       const actor = actorByKey(event.actor);
@@ -696,6 +840,7 @@
     }
 
     hideNarrator();
+    hidePhysics();
     showBanner("ROUND 1 OUTCOME: ✅ FORMULA SAFE");
     els.judgeProgressFill.style.width = "48%";
     await sleep(950);
@@ -734,6 +879,7 @@
     }
 
     hideNarrator();
+    hidePhysics();
     showBanner("ROUND 2 OUTCOME: ❌ PLANKTON STEALS THE FORMULA");
     els.judgeProgressFill.style.width = "100%";
     await sleep(1000);
@@ -787,6 +933,7 @@
       await judgeEvent(token, e, 0);
     }
     hideNarrator();
+    hidePhysics();
     showBanner("OUTCOME: PLANKTON FAILS. AGAIN.");
     await sleep(1100);
     if (token === state.runToken) hideBanner();
@@ -835,6 +982,7 @@
     els.changeBadge.classList.remove("is-on");
     hideNarrator();
     hideBanner();
+    hidePhysics();
     showScreen("home");
     state.mode = "home";
   }
