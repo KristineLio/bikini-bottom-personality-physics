@@ -113,6 +113,7 @@
     changeBadge: $("#changeBadge"),
     narrator: $("#narrator"),
     stageBanner: $("#stageBanner"),
+    chainBadge: $("#chainBadge"),
     physicsLayer: $("#physicsLayer"),
     physicsActor: $("#physicsActor"),
     physicsRule: $("#physicsRule"),
@@ -171,6 +172,7 @@
     hideResult();
     hideNarrator();
     hideBanner();
+    hideChainBadge();
     hidePhysics();
     setChaos(8);
   }
@@ -280,6 +282,25 @@
   function distance(a, b) {
     if (!a || !b) return Infinity;
     return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
+  function proximityWeight(a, b, maxDistance = 70) {
+    if (!a || !b) return 0;
+    return clamp(1 - (distance(a, b) / maxDistance), 0, 1);
+  }
+
+  function pointToSegmentDistance(point, start, end) {
+    if (!point || !start || !end) return Infinity;
+    const vx = end.x - start.x;
+    const vy = end.y - start.y;
+    const wx = point.x - start.x;
+    const wy = point.y - start.y;
+    const len2 = vx * vx + vy * vy;
+    if (len2 === 0) return distance(point, start);
+    const t = clamp((wx * vx + wy * vy) / len2, 0, 1);
+    const px = start.x + t * vx;
+    const py = start.y + t * vy;
+    return Math.hypot(point.x - px, point.y - py);
   }
 
   function hashString(input) {
@@ -532,6 +553,19 @@
     els.narrator.classList.remove("is-on");
   }
 
+  function showChainBadge(step, total, label) {
+    if (!els.chainBadge) return;
+    els.chainBadge.innerHTML = '<span>CHAIN ' + step + '/' + total + '</span><b>' + label + '</b>';
+    els.chainBadge.classList.remove("chain-pulse");
+    void els.chainBadge.offsetWidth;
+    els.chainBadge.classList.add("is-on", "chain-pulse");
+  }
+
+  function hideChainBadge() {
+    if (!els.chainBadge) return;
+    els.chainBadge.classList.remove("is-on", "chain-pulse");
+  }
+
   function showBanner(text) {
     els.stageBanner.textContent = text;
     els.stageBanner.classList.add("is-on");
@@ -646,6 +680,29 @@
       addActor("plankton", 28, 60);
       addProp("formula", 50, 54);
     }
+  }
+
+  function loadChainReactionSetup() {
+    state.runToken++;
+    showScreen("play");
+    setModeChrome("director");
+    clearStage();
+    setScene("krusty");
+
+    // This button only places objects. The outcome is still resolved from
+    // personality priorities + geometry when ACTION is pressed.
+    addActor("plankton", 22, 58);
+    addActor("patrick", 46, 68);
+    addActor("squidward", 58, 78);
+    addActor("mrkrabs", 84, 61);
+
+    addProp("formula", 31, 50);
+    addProp("money", 72, 49);
+    addProp("clarinet", 58, 61);
+
+    setChaos(22);
+    showBanner("MOTIVATION COLLISION LOADED — PRESS ACTION");
+    setTimeout(hideBanner, 1800);
   }
 
   function openConch() {
