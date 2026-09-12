@@ -158,15 +158,48 @@
         <div class="stage-column">
           <div id="stage" class="stage scene-krusty" aria-label="Interactive scene">
             <div class="stage-sky"></div>
+
+            <div class="stage-atmosphere" aria-hidden="true">
+              <i class="light-ray ray-a"></i>
+              <i class="light-ray ray-b"></i>
+              <i class="ambient-bubble bubble-a"></i>
+              <i class="ambient-bubble bubble-b"></i>
+              <i class="ambient-bubble bubble-c"></i>
+              <i class="ambient-bubble bubble-d"></i>
+            </div>
+
             <div class="stage-backdrop">
+              <div class="ceiling-beam beam-a"></div>
+              <div class="ceiling-beam beam-b"></div>
               <div class="scene-title" id="sceneTitle">THE KRUSTY KRAB</div>
-              <div class="window window-a"></div>
-              <div class="window window-b"></div>
+              <div class="window window-a"><i></i></div>
+              <div class="window window-b"><i></i></div>
+
+              <div class="kk-landmark kk-menu">
+                <span>KRABBY PATTY</span>
+                <i>★</i><i>★</i><i>★</i>
+              </div>
+              <div class="kk-landmark kk-register">
+                <span></span>
+              </div>
+
               <div class="counter-art"></div>
               <div class="booth-art"></div>
+              <div class="wall-plank plank-a"></div>
+              <div class="wall-plank plank-b"></div>
               <div class="kelp kelp-a"></div>
               <div class="kelp kelp-b"></div>
             </div>
+
+            <div class="stage-foreground" aria-hidden="true">
+              <div class="floor-shine"></div>
+              <div class="foreground-table table-left"></div>
+              <div class="foreground-table table-right"></div>
+              <div class="foreground-edge"></div>
+            </div>
+
+            <div id="sceneFocus" class="scene-focus" aria-hidden="true"></div>
+            <div id="consequenceFlash" class="consequence-flash" aria-hidden="true"></div>
 
             <div id="judgeOverlay" class="judge-overlay" aria-live="polite"></div>
             <div id="butterflyFx" class="butterfly-fx">🦋</div>
@@ -177,8 +210,8 @@
 
             <aside id="physicsLayer" class="physics-layer" aria-live="polite" aria-label="Explain the physics">
               <div class="physics-layer-head">
-                <span>🧠 EXPLAIN THE PHYSICS</span>
-                <small>live decision rule</small>
+                <span>🧠 PERSONALITY X-RAY</span>
+                <small>why this action wins</small>
               </div>
               <div class="physics-rule-line">
                 <strong id="physicsActor">PLANKTON</strong>

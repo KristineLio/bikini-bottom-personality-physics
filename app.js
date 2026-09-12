@@ -114,6 +114,8 @@
     narrator: $("#narrator"),
     stageBanner: $("#stageBanner"),
     chainBadge: $("#chainBadge"),
+    sceneFocus: $("#sceneFocus"),
+    consequenceFlash: $("#consequenceFlash"),
     physicsLayer: $("#physicsLayer"),
     physicsActor: $("#physicsActor"),
     physicsRule: $("#physicsRule"),
@@ -174,6 +176,7 @@
     hideBanner();
     hideChainBadge();
     hidePhysics();
+    clearVisualFocus();
     setChaos(8);
   }
 
@@ -224,7 +227,7 @@
   function renderStage() {
     els.stageActors.innerHTML = state.actors.map(a => {
       const c = CHARACTERS[a.key];
-      return '<div class="actor" data-type="actor" data-key="' + a.key + '" style="left:' + a.x + '%;top:' + a.y + '%" title="Drag to move · double-click to remove">' +
+      return '<div class="actor" data-type="actor" data-key="' + a.key + '" style="left:' + a.x + '%;top:' + a.y + '%;z-index:' + (6 + Math.round(a.y / 15)) + '" title="Drag to move · double-click to remove">' +
         toonMarkup(a.key) +
         '<div class="actor-carry' + (a.carry ? " is-on" : "") + '" aria-hidden="true">' + (a.carry ? (PROPS[a.carry]?.icon || "") : "") + '</div>' +
         '<div class="actor-name">' + c.name.toUpperCase() + '</div>' +
@@ -234,7 +237,7 @@
 
     els.stageProps.innerHTML = state.props.map(p => {
       const prop = PROPS[p.key];
-      return '<div class="prop-object ' + (prop.css || "") + (p.taken ? " is-taken" : "") + '" data-type="prop" data-key="' + p.key + '" style="left:' + p.x + '%;top:' + p.y + '%" title="Drag to move · double-click to remove">' +
+      return '<div class="prop-object ' + (prop.css || "") + (p.taken ? " is-taken" : "") + '" data-type="prop" data-key="' + p.key + '" style="left:' + p.x + '%;top:' + p.y + '%;z-index:' + (5 + Math.round(p.y / 15)) + '" title="Drag to move · double-click to remove">' +
         '<span>' + prop.icon + '</span><small>' + prop.name.toUpperCase() + '</small></div>';
     }).join("");
 
@@ -266,6 +269,7 @@
       obj.y = Math.round(y * 10) / 10;
       el.style.left = obj.x + "%";
       el.style.top = obj.y + "%";
+      el.style.zIndex = String((type === "actor" ? 6 : 5) + Math.round(obj.y / 15));
     });
 
     const end = () => { state.dragging = null; };
@@ -320,6 +324,48 @@
     return [state.scene, actors, props, extra].join("::");
   }
 
+  function clearVisualFocus() {
+    if (!els.stage) return;
+    els.stage.classList.remove("has-active-character", "is-payoff");
+    els.stage.removeAttribute("data-visual-phase");
+    $$(".actor", els.stage).forEach(el => el.classList.remove("is-active-character", "focus", "is-payoff-escape"));
+    $$(".prop-object", els.stage).forEach(el => el.classList.remove("is-active-target"));
+    if (els.sceneFocus) {
+      els.sceneFocus.style.removeProperty("--focus-x");
+      els.sceneFocus.style.removeProperty("--focus-y");
+    }
+  }
+
+  function focusVisualEvent(actorKey, targetKey, phase = "stimulus") {
+    clearVisualFocus();
+    const actor = actorByKey(actorKey);
+    const target = targetKey ? propByKey(targetKey) : null;
+    const actorEl = actorElement(actorKey);
+    const targetEl = targetKey ? propElement(targetKey) : null;
+
+    if (actorEl) actorEl.classList.add("is-active-character", "focus");
+    if (targetEl) targetEl.classList.add("is-active-target");
+
+    if (actorEl) els.stage.classList.add("has-active-character");
+    els.stage.dataset.visualPhase = phase;
+
+    const focusX = target ? ((actor?.x || 50) + target.x) / 2 : (actor?.x || 50);
+    const focusY = target ? ((actor?.y || 55) + target.y) / 2 : (actor?.y || 55);
+    if (els.sceneFocus) {
+      els.sceneFocus.style.setProperty("--focus-x", focusX + "%");
+      els.sceneFocus.style.setProperty("--focus-y", focusY + "%");
+    }
+  }
+
+  function flashConsequence(kind = "normal") {
+    if (!els.consequenceFlash) return;
+    els.consequenceFlash.dataset.kind = kind;
+    els.consequenceFlash.classList.remove("is-on");
+    void els.consequenceFlash.offsetWidth;
+    els.consequenceFlash.classList.add("is-on");
+    setTimeout(() => els.consequenceFlash?.classList.remove("is-on"), 520);
+  }
+
   function actorElement(key) {
     return $('.actor[data-key="' + key + '"]', els.stage);
   }
@@ -357,6 +403,7 @@
 
     obj.x = x;
     obj.y = y;
+    el.style.zIndex = String((type === "actor" ? 6 : 5) + Math.round(y / 15));
     el.style.transition = "left " + duration + "ms cubic-bezier(.2,.8,.2,1), top " + duration + "ms cubic-bezier(.2,.8,.2,1)";
     requestAnimationFrame(() => {
       el.style.left = x + "%";
@@ -380,6 +427,29 @@
     el.classList.remove("anticipate");
     await moveObject("actor", key, x, y, duration);
   }
+
+  async function dramaticEscapeWithProp(actorKey) {
+    const actor = actorByKey(actorKey);
+    const el = actorElement(actorKey);
+    if (!actor || !el) return;
+
+    els.stage.classList.add("is-payoff");
+    el.classList.add("is-payoff-escape", "is-active-character");
+    flashConsequence("payoff");
+    await sleep(120);
+
+    const escapeX = actor.x > 50 ? 91 : 9;
+    const escapeY = clamp(actor.y - 8, 28, 78);
+    await walkActorTo(actorKey, escapeX, escapeY, 760);
+
+    react(actorKey, actorKey === "plankton" ? "Mine!" : "Got it!", "PAYOFF");
+    await sleep(280);
+    flashConsequence("payoff");
+
+    el.classList.remove("is-payoff-escape");
+    setTimeout(() => els.stage?.classList.remove("is-payoff"), 500);
+  }
+
 
   function setCarry(actorKey, propKey) {
     const actor = actorByKey(actorKey);
@@ -551,6 +621,78 @@
 
   function hideNarrator() {
     els.narrator.classList.remove("is-on");
+  }
+
+  async function performVisualEvent(token, event, options = {}) {
+    if (token !== state.runToken) return false;
+
+    const target = event.target && propByKey(event.target);
+    const actor = actorByKey(event.actor);
+
+    // 1) Stimulus appears and the relevant character/target become the visual focus.
+    focusVisualEvent(event.actor, event.target || null, "stimulus");
+    await sleep(options.stimulusPause ?? 150);
+    if (token !== state.runToken) return false;
+
+    // 2) Reveal the winning personality rule as a short X-ray, not a dashboard.
+    els.stage.dataset.visualPhase = "rule";
+    showPhysics(event);
+    await sleep(options.rulePause ?? 190);
+    if (token !== state.runToken) return false;
+
+    // 3) Movement follows the selected target.
+    els.stage.dataset.visualPhase = "movement";
+    if (target && actor) {
+      const side = actor.x <= target.x ? -8 : 8;
+      await walkActorTo(
+        event.actor,
+        clamp(target.x + side, options.minX ?? 7, options.maxX ?? 93),
+        clamp(target.y + 10, options.minY ?? 18, options.maxY ?? 90),
+        options.moveDuration ?? 540
+      );
+    }
+    if (token !== state.runToken) return false;
+
+    // 4) Character reaction.
+    els.stage.dataset.visualPhase = "reaction";
+    react(event.actor, event.text, event.trait);
+    showNarrator(
+      CHARACTERS[event.actor]?.name || "Narrator",
+      event.why || ("because " + (event.trait || "personality").toLowerCase() + ".")
+    );
+
+    if (options.progress != null && els.judgeProgressFill) {
+      els.judgeProgressFill.style.width = options.progress + "%";
+    }
+    if (options.chaosMode === "set") {
+      setChaos(event.chaos);
+    } else if (options.chaosMode === "add") {
+      setChaos(state.chaos + (event.chaos || 5));
+    }
+
+    await sleep(options.reactionHold ?? 760);
+    if (token !== state.runToken) return false;
+
+    // 5) Consequence changes the world state.
+    els.stage.dataset.visualPhase = "consequence";
+    if (event.grabs) {
+      markPropTaken(event.grabs, true, event.actor);
+      flashConsequence("grab");
+    }
+
+    if (event.takes) {
+      markPropTaken(event.takes, true, event.actor);
+      await dramaticEscapeWithProp(event.actor);
+    } else {
+      flashConsequence("normal");
+      await sleep(options.consequencePause ?? 180);
+    }
+
+    if (token !== state.runToken) return false;
+    hidePhysics();
+    hideNarrator();
+    clearVisualFocus();
+    return true;
   }
 
   function showChainBadge(step, total, label) {
@@ -1031,30 +1173,12 @@
         showChainBadge(i + 1, result.events.length, event.chainLabel || "World state changed");
       }
 
-      showPhysics(event);
-
-      const target = event.target && propByKey(event.target);
-      const actor = actorByKey(event.actor);
-      if (target && actor) {
-        const side = actor.x <= target.x ? -8 : 8;
-        await walkActorTo(event.actor, clamp(target.x + side, 7, 93), clamp(target.y + 10, 18, 90), 520);
-      }
-
-      react(event.actor, event.text, event.trait);
-      showNarrator(
-        CHARACTERS[event.actor]?.name || "Narrator",
-        event.why || ("because " + event.trait.toLowerCase() + ".")
-      );
-
-      setChaos(state.chaos + (event.chaos || 5));
-      await sleep(result.isChainReaction ? 1120 : 1000);
-
-      if (event.grabs) markPropTaken(event.grabs, true, event.actor);
-      if (event.takes) {
-        markPropTaken(event.takes, true, event.actor);
-        const thief = actorByKey(event.actor);
-        if (thief) await walkActorTo(event.actor, clamp(thief.x - 22, 8, 92), clamp(thief.y + 6, 18, 90), 520);
-      }
+      const ok = await performVisualEvent(token, event, {
+        chaosMode:"add",
+        reactionHold:result.isChainReaction ? 820 : 720,
+        moveDuration:560
+      });
+      if (!ok) return;
     }
 
     if (token !== state.runToken) return;
@@ -1279,28 +1403,16 @@
   }
 
   async function judgeEvent(token, event, progress) {
-    if (token !== state.runToken) return false;
-    showPhysics(event);
-    if (event.target) {
-      const target = propByKey(event.target);
-      const actor = actorByKey(event.actor);
-      if (target && actor) {
-        const side = actor.x <= target.x ? -8 : 8;
-        await walkActorTo(event.actor, clamp(target.x + side, 8, 92), clamp(target.y + 10, 20, 90), 530);
-      }
-    }
-    react(event.actor, event.text, event.trait);
-    showNarrator(CHARACTERS[event.actor].name, event.why);
-    setChaos(event.chaos);
-    els.judgeProgressFill.style.width = progress + "%";
-    await sleep(1050);
-    if (event.grabs) markPropTaken(event.grabs, true, event.actor);
-    if (event.takes) {
-      markPropTaken(event.takes, true, event.actor);
-      const thief = actorByKey(event.actor);
-      if (thief) await walkActorTo(event.actor, clamp(thief.x - 22, 8, 92), clamp(thief.y + 6, 18, 90), 520);
-    }
-    return token === state.runToken;
+    return performVisualEvent(token, event, {
+      chaosMode:"set",
+      progress,
+      minX:8,
+      maxX:92,
+      minY:20,
+      maxY:90,
+      moveDuration:550,
+      reactionHold:780
+    });
   }
 
   async function playVerificationScenario(scenarioKey) {
@@ -1528,6 +1640,24 @@
     state.mode = "home";
   }
 
+  function bindStageParallax() {
+    if (!els.stage || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+
+    els.stage.addEventListener("pointermove", event => {
+      if (event.pointerType === "touch") return;
+      const rect = els.stage.getBoundingClientRect();
+      const nx = clamp((event.clientX - rect.left) / rect.width, 0, 1) - .5;
+      const ny = clamp((event.clientY - rect.top) / rect.height, 0, 1) - .5;
+      els.stage.style.setProperty("--parallax-x", (nx * 14).toFixed(1) + "px");
+      els.stage.style.setProperty("--parallax-y", (ny * 10).toFixed(1) + "px");
+    });
+
+    els.stage.addEventListener("pointerleave", () => {
+      els.stage.style.setProperty("--parallax-x", "0px");
+      els.stage.style.setProperty("--parallax-y", "0px");
+    });
+  }
+
   function bindUI() {
     $("#btnJudge").addEventListener("click", openJudge);
     $("#btnDirector").addEventListener("click", () => openDirector(false));
@@ -1556,6 +1686,7 @@
 
   renderTrays();
   bindUI();
+  bindStageParallax();
   setChaos(8);
   setScene("krusty");
 })();
