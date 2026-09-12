@@ -1276,3 +1276,154 @@ h1 span{color:var(--yellow)}
   .determinism-status.match,
   .determinism-status.changed{animation:none!important}
 }
+
+/* V2.5 — Director Mode motivation collision */
+.director-surprise-card{
+  margin:10px 0 12px;
+  padding:11px;
+  border:3px solid var(--ink);
+  border-radius:16px;
+  background:
+    radial-gradient(circle at 100% 0%,rgba(255,228,92,.35),transparent 36%),
+    linear-gradient(180deg,#fffdf0,#fff7cf);
+  box-shadow:0 5px 0 rgba(6,59,104,.2);
+}
+.director-surprise-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:8px;
+}
+.director-surprise-head h3{
+  margin:3px 0 0;
+  font-size:12px;
+}
+.emergent-pill{
+  display:inline-flex;
+  align-items:center;
+  min-height:24px;
+  padding:4px 7px;
+  border:2px solid #24536f;
+  border-radius:999px;
+  background:#e6f7ff;
+  color:#16425c;
+  font-family:Bungee,Impact,"Arial Black",sans-serif;
+  font-size:6px;
+  letter-spacing:.06em;
+  white-space:nowrap;
+}
+.surprise-map{
+  margin:9px 0 7px;
+  padding:7px 8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:4px;
+  border:2px dashed rgba(22,50,79,.3);
+  border-radius:11px;
+  background:rgba(255,255,255,.72);
+  font-size:12px;
+}
+.surprise-map b{
+  font-size:7px;
+  letter-spacing:.03em;
+}
+.surprise-map i{
+  color:#94a3b8;
+  font-style:normal;
+  padding:0 2px;
+}
+.director-surprise-card p{
+  margin:0 0 8px;
+  font-size:8.5px;
+  line-height:1.35;
+  font-weight:800;
+  color:#486172;
+}
+.btn-surprise{
+  width:100%;
+  min-height:38px;
+  padding:8px 10px!important;
+  background:linear-gradient(180deg,#fff784,#ffd73c)!important;
+  border:2px solid var(--ink)!important;
+  box-shadow:0 4px 0 #0b3a66!important;
+  font-size:9px!important;
+}
+.btn-surprise:hover{
+  transform:translateY(-2px)!important;
+  box-shadow:0 6px 0 #0b3a66!important;
+}
+
+/* Live causal-chain badge shown only when geometry + priorities create a cascade */
+.chain-badge{
+  position:absolute;
+  z-index:21;
+  left:14px;
+  top:76px;
+  max-width:250px;
+  display:grid;
+  gap:3px;
+  padding:8px 10px;
+  border:3px solid var(--ink);
+  border-radius:13px;
+  background:linear-gradient(180deg,#fffbe8,#ffefa0);
+  box-shadow:0 6px 0 rgba(6,59,104,.24),0 14px 26px rgba(2,32,64,.16);
+  opacity:0;
+  transform:translateX(-10px) scale(.96);
+  pointer-events:none;
+  transition:opacity .16s ease,transform .16s ease;
+}
+.chain-badge.is-on{
+  opacity:1;
+  transform:translateX(0) scale(1);
+}
+.chain-badge.chain-pulse{
+  animation:chainBadgePop .32s cubic-bezier(.2,.9,.25,1.2);
+}
+.chain-badge span{
+  color:#0873b5;
+  font-family:Bungee,Impact,"Arial Black",sans-serif;
+  font-size:7px;
+  letter-spacing:.08em;
+}
+.chain-badge b{
+  font-size:9px;
+  line-height:1.22;
+}
+@keyframes chainBadgePop{
+  0%{opacity:.3;transform:translateX(-10px) scale(.92)}
+  70%{opacity:1;transform:translateX(2px) scale(1.03)}
+  100%{opacity:1;transform:translateX(0) scale(1)}
+}
+@media(max-width:720px){
+  .director-surprise-card{
+    padding:10px;
+  }
+  .chain-badge{
+    left:10px;
+    top:68px;
+    max-width:190px;
+    padding:7px 8px;
+  }
+  .chain-badge b{font-size:8px}
+}
+@media(max-width:520px){
+  .director-surprise-head{
+    display:block;
+  }
+  .emergent-pill{
+    margin-top:5px;
+  }
+  .chain-badge{
+    top:62px;
+    left:8px;
+    max-width:160px;
+  }
+  .chain-badge span{font-size:6px}
+  .chain-badge b{font-size:7px}
+}
+@media (prefers-reduced-motion:reduce){
+  .chain-badge{transition:none!important}
+  .chain-badge.chain-pulse{animation:none!important}
+}
