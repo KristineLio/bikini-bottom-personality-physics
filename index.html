@@ -173,6 +173,28 @@
             <div id="changeBadge" class="change-badge"></div>
             <div id="stageBanner" class="stage-banner"></div>
             <div id="narrator" class="narrator"></div>
+
+            <aside id="physicsLayer" class="physics-layer" aria-live="polite" aria-label="Explain the physics">
+              <div class="physics-layer-head">
+                <span>🧠 EXPLAIN THE PHYSICS</span>
+                <small>live decision rule</small>
+              </div>
+              <div class="physics-rule-line">
+                <strong id="physicsActor">PLANKTON</strong>
+                <span aria-hidden="true">→</span>
+                <code id="physicsRule">formula_obsession = HIGH</code>
+              </div>
+              <div class="physics-mini-flow">
+                <div><small>INPUT</small><b id="physicsInput">📜 Formula visible</b></div>
+                <span>→</span>
+                <div><small>RULE</small><b id="physicsRuleShort">Target formula</b></div>
+                <span>→</span>
+                <div><small>ACTION</small><b id="physicsAction">Move toward formula</b></div>
+                <span>→</span>
+                <div><small>CONSEQUENCE</small><b id="physicsConsequence">Defense triggered</b></div>
+              </div>
+            </aside>
+
             <div id="stageActors" class="stage-objects"></div>
             <div id="stageProps" class="stage-objects"></div>
           </div>
@@ -258,6 +280,35 @@
           </div>
 
           <p class="compare-explainer">Characters weren’t given a new script. <strong>Their personalities reacted to the new situation.</strong></p>
+
+          <section class="physics-proof" aria-label="Decision physics comparison">
+            <div class="physics-proof-head">
+              <span class="panel-kicker">EXPLAIN THE PHYSICS</span>
+              <h3>Input → personality rule → action → consequence</h3>
+            </div>
+
+            <div class="physics-proof-row">
+              <span class="physics-round-tag">ROUND 1</span>
+              <div class="physics-proof-node"><small>INPUT</small><b>📜 Formula visible</b></div>
+              <span class="physics-proof-arrow">→</span>
+              <div class="physics-proof-node rule"><small>PERSONALITY RULE</small><code>SPONGEBOB → protect = HIGH</code></div>
+              <span class="physics-proof-arrow">→</span>
+              <div class="physics-proof-node"><small>ACTION</small><b>Guards formula</b></div>
+              <span class="physics-proof-arrow">→</span>
+              <div class="physics-proof-node good"><small>CONSEQUENCE</small><b>✅ Formula safe</b></div>
+            </div>
+
+            <div class="physics-proof-row changed">
+              <span class="physics-round-tag">ROUND 2</span>
+              <div class="physics-proof-node"><small>INPUT</small><b>💵 Money added</b></div>
+              <span class="physics-proof-arrow">→</span>
+              <div class="physics-proof-node rule"><small>PERSONALITY RULE</small><code>MR. KRABS → money_priority &gt; formula_priority</code></div>
+              <span class="physics-proof-arrow">→</span>
+              <div class="physics-proof-node"><small>ACTION</small><b>Leaves formula</b></div>
+              <span class="physics-proof-arrow">→</span>
+              <div class="physics-proof-node bad"><small>CONSEQUENCE</small><b>❌ Plankton steals it</b></div>
+            </div>
+          </section>
 
           <div class="compare-actions">
             <button id="btnReplayJudge" class="btn btn-primary">↻ REPLAY DEMO</button>
