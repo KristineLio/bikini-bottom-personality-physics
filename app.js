@@ -1640,6 +1640,24 @@
     state.mode = "home";
   }
 
+  function bindStageParallax() {
+    if (!els.stage || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+
+    els.stage.addEventListener("pointermove", event => {
+      if (event.pointerType === "touch") return;
+      const rect = els.stage.getBoundingClientRect();
+      const nx = clamp((event.clientX - rect.left) / rect.width, 0, 1) - .5;
+      const ny = clamp((event.clientY - rect.top) / rect.height, 0, 1) - .5;
+      els.stage.style.setProperty("--parallax-x", (nx * 14).toFixed(1) + "px");
+      els.stage.style.setProperty("--parallax-y", (ny * 10).toFixed(1) + "px");
+    });
+
+    els.stage.addEventListener("pointerleave", () => {
+      els.stage.style.setProperty("--parallax-x", "0px");
+      els.stage.style.setProperty("--parallax-y", "0px");
+    });
+  }
+
   function bindUI() {
     $("#btnJudge").addEventListener("click", openJudge);
     $("#btnDirector").addEventListener("click", () => openDirector(false));
@@ -1668,6 +1686,7 @@
 
   renderTrays();
   bindUI();
+  bindStageParallax();
   setChaos(8);
   setScene("krusty");
 })();
