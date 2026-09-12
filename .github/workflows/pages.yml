@@ -1,8 +1,9 @@
-name: Deploy GitHub Pages
+name: Portfolio site
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -11,24 +12,37 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
       - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
       - name: Run deterministic engine tests
         run: npm test
 
+      - name: Build static portfolio artifact
+        run: |
+          mkdir -p dist/assets/characters dist/docs
+          cp index.html styles.css app.js engine.js personalities.js world.js scenarios.js ui.js animations.js dist/
+          cp assets/characters/*.svg dist/assets/characters/
+          cp docs/butterfly-demo.svg docs/butterfly-demo.gif dist/docs/
+          test -s dist/index.html
+          test -s dist/engine.js
+          test -s dist/docs/butterfly-demo.gif
+
   deploy:
-    needs: test
+    if: github.event_name != 'pull_request'
+    needs: verify
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
