@@ -1641,7 +1641,7 @@
   }
 
   function bindStageParallax() {
-    if (!els.stage || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    if (!els.stage || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
 
     els.stage.addEventListener("pointermove", event => {
       if (event.pointerType === "touch") return;
