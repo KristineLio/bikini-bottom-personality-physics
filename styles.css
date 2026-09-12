@@ -387,3 +387,161 @@ h1 span{color:var(--yellow)}
 .toon-squidward{background-image:url("assets/characters/squidward.svg")!important}
 .toon-mrkrabs{background-image:url("assets/characters/mr-krabs.svg")!important}
 .toon-plankton{background-image:url("assets/characters/plankton.svg")!important}
+
+/* V2.1 — polished character motion and visible causality */
+.toon{
+  background-color:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  filter:drop-shadow(0 10px 7px rgba(8,38,66,.24));
+}
+.hero-character .toon{
+  width:96px!important;
+  height:118px!important;
+  transform:none!important;
+}
+.trait-card .mini-toon{
+  width:58px!important;
+  height:68px!important;
+  min-width:58px;
+  margin:-8px 0!important;
+  transform:none!important;
+}
+.object-card .toon{
+  width:58px!important;
+  height:66px!important;
+  margin:-7px 0 0!important;
+  transform:none!important;
+}
+.actor{
+  --face:1;
+  width:112px!important;
+  min-height:132px;
+  perspective:400px;
+}
+.actor.is-facing-left{--face:-1}
+.actor.is-facing-right{--face:1}
+.actor .toon{
+  width:108px!important;
+  height:122px!important;
+  transform:scaleX(var(--face)) scale(.86)!important;
+  transform-origin:50% 90%;
+  transition:filter .18s ease;
+}
+.actor:after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:13px;
+  width:62px;
+  height:13px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:radial-gradient(ellipse,rgba(4,28,48,.3),transparent 68%);
+  z-index:-1;
+  pointer-events:none;
+}
+.actor.anticipate .toon{
+  animation:characterAnticipate .12s ease both!important;
+}
+.actor.is-walking .toon{
+  animation:characterWalk .30s ease-in-out infinite!important;
+  filter:drop-shadow(0 13px 8px rgba(8,38,66,.3));
+}
+.actor.react .toon{
+  animation:characterReact .42s cubic-bezier(.2,.85,.25,1.25) both!important;
+}
+.actor.focus .toon{
+  filter:drop-shadow(0 0 13px rgba(255,244,145,.95)) drop-shadow(0 10px 7px rgba(8,38,66,.24))!important;
+}
+.actor-carry{
+  position:absolute;
+  z-index:20;
+  right:3px;
+  top:57px;
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  border:0;
+  border-radius:50%;
+  font-size:27px;
+  opacity:0;
+  transform:translateY(7px) scale(.4) rotate(-12deg);
+  transition:opacity .18s ease,transform .22s cubic-bezier(.2,.9,.2,1.25);
+  filter:drop-shadow(0 5px 4px rgba(0,0,0,.25));
+  pointer-events:none;
+}
+.actor.is-facing-left .actor-carry{right:auto;left:3px}
+.actor-carry.is-on{
+  opacity:1;
+  transform:translateY(0) scale(1) rotate(4deg);
+  animation:carryBob .7s ease-in-out infinite alternate;
+}
+.actor-bubble{
+  bottom:98%!important;
+  min-width:138px!important;
+  background:linear-gradient(180deg,#fff,#f8fdff)!important;
+  border-width:3px!important;
+  box-shadow:0 6px 0 rgba(8,58,98,.16),0 12px 25px rgba(8,38,66,.14)!important;
+}
+.actor-bubble:after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:-10px;
+  width:14px;
+  height:14px;
+  background:#fff;
+  border-right:3px solid var(--ink);
+  border-bottom:3px solid var(--ink);
+  transform:translateX(-50%) rotate(45deg);
+}
+.actor-bubble small{
+  display:inline-block!important;
+  margin-bottom:5px!important;
+  padding:2px 6px;
+  border-radius:999px;
+  background:#dff5ff;
+  color:#0873b5!important;
+  font-size:7px!important;
+  letter-spacing:.07em!important;
+}
+.actor-bubble span{
+  display:block;
+  font-size:10px;
+  line-height:1.2;
+}
+.prop-object.is-taken{
+  opacity:0!important;
+  transform:translate(-50%,-50%) scale(.25)!important;
+  transition:opacity .18s ease,transform .2s ease!important;
+}
+@keyframes characterAnticipate{
+  0%{transform:scaleX(var(--face)) scale(.86) translateY(0)}
+  100%{transform:scaleX(var(--face)) scale(.86) translateY(4px) scaleY(.96)}
+}
+@keyframes characterWalk{
+  0%,100%{transform:scaleX(var(--face)) scale(.86) translateY(0) rotate(-1.5deg)}
+  50%{transform:scaleX(var(--face)) scale(.86) translateY(-9px) rotate(1.5deg)}
+}
+@keyframes characterReact{
+  0%{transform:scaleX(var(--face)) scale(.86) translateY(0)}
+  45%{transform:scaleX(var(--face)) scale(.98) translateY(-15px) rotate(3deg)}
+  72%{transform:scaleX(var(--face)) scale(.82) translateY(3px) rotate(-2deg)}
+  100%{transform:scaleX(var(--face)) scale(.86) translateY(0)}
+}
+@keyframes carryBob{
+  to{transform:translateY(-5px) scale(1.06) rotate(-3deg)}
+}
+@media (prefers-reduced-motion:reduce){
+  .actor .toon,.actor-carry{animation:none!important;transition:none!important}
+}
+@media(max-width:720px){
+  .actor{width:92px!important;min-height:112px}
+  .actor .toon{width:88px!important;height:104px!important}
+  .actor-bubble{min-width:118px!important}
+  .actor-carry{top:47px;right:0}
+  .actor.is-facing-left .actor-carry{left:0}
+  .hero-character .toon{width:80px!important;height:96px!important}
+}
