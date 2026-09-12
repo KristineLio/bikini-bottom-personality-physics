@@ -310,10 +310,48 @@
             </div>
           </section>
 
+          <section class="determinism-proof" aria-label="Determinism proof">
+            <div class="determinism-head">
+              <div>
+                <span class="panel-kicker">PROVE DETERMINISM</span>
+                <h3>Same setup → same ordered trace.</h3>
+              </div>
+              <span id="determinismStatus" class="determinism-status baseline">BASELINE CAPTURED</span>
+            </div>
+
+            <div class="determinism-fingerprints">
+              <div>
+                <small>SETUP FINGERPRINT</small>
+                <code id="determinismSetupHash">—</code>
+              </div>
+              <span aria-hidden="true">→</span>
+              <div>
+                <small>ACTION TRACE</small>
+                <code id="determinismTraceHash">—</code>
+              </div>
+              <span aria-hidden="true">→</span>
+              <div>
+                <small>OUTCOME</small>
+                <b id="determinismOutcome">✅ FORMULA SAFE</b>
+              </div>
+            </div>
+
+            <p id="determinismMessage" class="determinism-message">
+              Run the exact same input again. If the ordered action trace matches, the same world state produced the same episode.
+            </p>
+
+            <div class="determinism-actions">
+              <button id="btnRunSameSetup" class="btn btn-light">↻ RUN SAME SETUP AGAIN</button>
+              <button id="btnChangeOneVariable" class="btn btn-primary">🦋 CHANGE ONE VARIABLE</button>
+            </div>
+          </section>
+
           <div class="compare-actions">
-            <button id="btnReplayJudge" class="btn btn-primary">↻ REPLAY DEMO</button>
-            <button id="btnOpenDirectorFromCompare" class="btn btn-light">🎥 TRY DIRECTOR MODE</button>
-            <button id="btnCompareHome" class="btn btn-ghost-dark">← HOME</button>
+            <button id="btnReplayJudge" class="mode-link compare-link">Replay full demo</button>
+            <span aria-hidden="true">·</span>
+            <button id="btnOpenDirectorFromCompare" class="mode-link compare-link">Try Director Mode</button>
+            <span aria-hidden="true">·</span>
+            <button id="btnCompareHome" class="mode-link compare-link">Home</button>
           </div>
         </div>
       </section>
