@@ -2820,3 +2820,17 @@ button{
     linear-gradient(180deg,#fffdf2,#fff7d8)!important;
   border:3px solid rgba(22,50,79,.72)!important;
 }
+
+
+/* Re-enable cleaned true-alpha character PNGs */
+.toon-spongebob{background-image:url("assets/characters/spongebob.png")!important}
+.toon-patrick{background-image:url("assets/characters/patrick.png")!important}
+.toon-squidward{background-image:url("assets/characters/squidward.png")!important}
+.toon-mrkrabs{background-image:url("assets/characters/mr-krabs.png")!important}
+.toon-plankton{background-image:url("assets/characters/plankton.png")!important}
+
+.actor.variant-alert .toon-spongebob{background-image:url("assets/characters/spongebob-alert.png")!important}
+.actor.variant-excited .toon-patrick{background-image:url("assets/characters/patrick-excited.png")!important}
+.actor.variant-reacting .toon-squidward{background-image:url("assets/characters/squidward-reacting.png")!important}
+.actor.variant-money-focus .toon-mrkrabs{background-image:url("assets/characters/mr-krabs-money-focus.png")!important}
+.actor.variant-carry-formula .toon-plankton{background-image:url("assets/characters/plankton-carry-formula.png")!important}
