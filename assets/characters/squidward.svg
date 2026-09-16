@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 220" role="img" aria-label="Squidward">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#87ded2"/><stop offset="1" stop-color="#4da79f"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="5" stdDeviation="3" flood-opacity=".22"/></filter></defs>
+<g filter="url(#s)" stroke="#17324d" stroke-width="5" stroke-linejoin="round">
+<ellipse fill="url(#g)" cx="91" cy="60" rx="49" ry="51"/>
+<path fill="#dff0a0" d="M54 54 Q69 42 84 54 L83 80 Q68 91 55 80 ZM96 54 Q112 42 128 54 L127 80 Q111 91 97 80 Z"/>
+<circle fill="#b95445" stroke="none" cx="74" cy="65" r="5"/><circle fill="#b95445" stroke="none" cx="108" cy="65" r="5"/>
+<path fill="url(#g)" d="M85 68 Q99 69 100 98 Q96 115 83 103 Q77 91 85 68Z"/>
+<path fill="none" d="M70 108 Q92 100 113 109" stroke-linecap="round"/>
+<rect fill="#a85a2c" x="55" y="113" width="73" height="54" rx="20"/>
+<path fill="url(#g)" d="M63 160 Q52 184 42 204 Q51 215 60 203 L77 171ZM116 160 Q127 184 140 201 Q133 215 123 202 L103 171Z"/>
+<path fill="url(#g)" d="M57 127 Q32 131 27 151 Q34 160 42 149 Q45 140 62 140ZM124 127 Q151 132 154 151 Q147 160 139 149 Q136 140 120 139Z"/>
+<path fill="url(#g)" d="M71 167 Q64 187 67 208 Q79 214 82 202 L85 170ZM98 168 Q99 190 95 209 Q106 215 113 203 L112 171Z"/>
+</g></svg>
