@@ -2641,3 +2641,30 @@ h1 span{color:var(--yellow)}
   }
   .result-dock{padding:30px 24px 34px!important}
 }
+
+
+/* Interaction safety hotfix — decorative art must never block controls */
+.bubble-field,
+.bubble-field *,
+.ocean-glow,
+.hero-world,
+.hero-stage-card,
+.hero-stage,
+.hero-stage *,
+.stage-atmosphere,
+.stage-foreground,
+.scene-focus,
+.consequence-flash{
+  pointer-events:none!important;
+}
+.hero-cta,
+.judge-path,
+.secondary-modes,
+.btn,
+.mode-link,
+button{
+  position:relative;
+  z-index:60;
+  pointer-events:auto!important;
+  touch-action:manipulation;
+}
