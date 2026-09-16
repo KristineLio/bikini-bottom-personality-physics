@@ -165,7 +165,7 @@ import { sleep, transitionPosition } from "./animations.js";
       const c = CHARACTERS[a.key];
       return '<div class="actor" data-type="actor" data-key="' + a.key + '" style="left:' + a.x + '%;top:' + a.y + '%;z-index:' + (6 + Math.round(a.y / 15)) + '" title="Drag to move · double-click to remove">' +
         toonMarkup(a.key) +
-        '<div class="actor-carry' + (a.carry ? " is-on" : "") + '" aria-hidden="true">' + (a.carry ? (PROPS[a.carry]?.icon || "") : "") + '</div>' +
+        '<div class="actor-carry' + (a.carry ? " is-on" : "") + '" data-prop="' + (a.carry || "") + '" aria-hidden="true">' + (a.carry ? (PROPS[a.carry]?.icon || "") : "") + '</div>' +
         '<div class="actor-name">' + c.name.toUpperCase() + '</div>' +
         '<div class="actor-bubble"><small>' + c.traits + '</small><span></span></div>' +
       '</div>';
@@ -227,7 +227,7 @@ import { sleep, transitionPosition } from "./animations.js";
     if (!els.stage) return;
     els.stage.classList.remove("has-active-character", "is-payoff");
     els.stage.removeAttribute("data-visual-phase");
-    $$(".actor", els.stage).forEach(el => el.classList.remove("is-active-character", "focus", "is-payoff-escape"));
+    $(".actor", els.stage).forEach(el => el.classList.remove("is-active-character", "focus", "is-payoff-escape", "variant-alert", "variant-excited", "variant-reacting", "variant-money-focus", "variant-carry-formula"));
     $$(".prop-object", els.stage).forEach(el => el.classList.remove("is-active-target"));
     if (els.sceneFocus) {
       els.sceneFocus.style.removeProperty("--focus-x");
@@ -242,7 +242,13 @@ import { sleep, transitionPosition } from "./animations.js";
     const actorEl = actorElement(actorKey);
     const targetEl = targetKey ? propElement(targetKey) : null;
 
-    if (actorEl) actorEl.classList.add("is-active-character", "focus");
+    if (actorEl) {
+      actorEl.classList.add("is-active-character", "focus");
+      if (actorKey === "spongebob" && targetKey === "formula") actorEl.classList.add("variant-alert");
+      if (actorKey === "patrick" && targetKey === "money") actorEl.classList.add("variant-excited");
+      if (actorKey === "squidward" && targetKey === "clarinet") actorEl.classList.add("variant-reacting");
+      if (actorKey === "mrkrabs" && targetKey === "money") actorEl.classList.add("variant-money-focus");
+    }
     if (targetEl) targetEl.classList.add("is-active-target");
 
     if (actorEl) els.stage.classList.add("has-active-character");
@@ -323,6 +329,7 @@ import { sleep, transitionPosition } from "./animations.js";
 
     els.stage.classList.add("is-payoff");
     el.classList.add("is-payoff-escape", "is-active-character");
+    if (actorKey === "plankton") el.classList.add("variant-carry-formula");
     flashConsequence("payoff");
     await sleep(options.escapeAnticipation ?? 120);
 
@@ -334,7 +341,7 @@ import { sleep, transitionPosition } from "./animations.js";
     await sleep(options.escapeHold ?? 280);
     flashConsequence("payoff");
 
-    el.classList.remove("is-payoff-escape");
+    el.classList.remove("is-payoff-escape", "variant-carry-formula");
     setTimeout(() => els.stage?.classList.remove("is-payoff"), 500);
   }
 
@@ -346,6 +353,7 @@ import { sleep, transitionPosition } from "./animations.js";
     if (!el) return;
     const carry = $(".actor-carry", el);
     if (carry) {
+      carry.dataset.prop = propKey || "";
       carry.textContent = propKey ? (PROPS[propKey]?.icon || "") : "";
       carry.classList.toggle("is-on", !!propKey);
     }
