@@ -5,25 +5,25 @@ import { readFile } from "node:fs/promises";
 const source = await readFile(new URL("../app.js", import.meta.url), "utf8");
 
 test("Judge Demo collection operations use the multi-element selector helper", () => {
-  assert.equal(
-    source.includes('$("[data-film-step]", els.judgeFilmStepper).forEach'),
-    false,
+  assert.doesNotMatch(
+    source,
+    /(^|[^$])\$\("\[data-film-step\]", els\.judgeFilmStepper\)\.forEach/m,
     "setJudgeFilmStep must not call forEach on the single-element $ helper"
   );
 
-  assert.equal(
-    source.includes('$(".prop-object.is-new-variable", els.stage).forEach'),
-    false,
+  assert.doesNotMatch(
+    source,
+    /(^|[^$])\$\("\.prop-object\.is-new-variable", els\.stage\)\.forEach/m,
     "resetJudgeFilmVisuals must not call forEach on the single-element $ helper"
   );
 
-  assert.equal(
-    source.includes('$$("[data-film-step]", els.judgeFilmStepper).forEach'),
-    true
+  assert.match(
+    source,
+    /\$\$\("\[data-film-step\]", els\.judgeFilmStepper\)\.forEach/
   );
 
-  assert.equal(
-    source.includes('$$(".prop-object.is-new-variable", els.stage).forEach'),
-    true
+  assert.match(
+    source,
+    /\$\$\("\.prop-object\.is-new-variable", els\.stage\)\.forEach/
   );
 });
