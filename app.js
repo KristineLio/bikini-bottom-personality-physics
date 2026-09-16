@@ -594,7 +594,7 @@ import { sleep, transitionPosition } from "./animations.js";
   function setJudgeFilmStep(step) {
     const activeIndex = JUDGE_FILM_STEPS.indexOf(step);
     if (!els.judgeFilmStepper || activeIndex < 0) return;
-    $("[data-film-step]", els.judgeFilmStepper).forEach(node => {
+    $$("[data-film-step]", els.judgeFilmStepper).forEach(node => {
       const index = JUDGE_FILM_STEPS.indexOf(node.dataset.filmStep);
       node.classList.toggle("is-active", index === activeIndex);
       node.classList.toggle("is-done", index < activeIndex);
@@ -616,7 +616,7 @@ import { sleep, transitionPosition } from "./animations.js";
   function resetJudgeFilmVisuals() {
     if (!els.stage) return;
     els.stage.classList.remove("is-variable-freeze");
-    $(".prop-object.is-new-variable", els.stage).forEach(el => el.classList.remove("is-new-variable"));
+    $$(".prop-object.is-new-variable", els.stage).forEach(el => el.classList.remove("is-new-variable"));
     showFilmFinale(false);
   }
 

@@ -2339,3 +2339,50 @@ h1 span{color:var(--yellow)}
   .film-finale.is-on em,
   .film-finale.is-on .film-finale-outcomes{animation:none!important}
 }
+
+
+/* ============================================================
+   Browser rendering regression hotfix
+   Keep simulation objects above scenery and below cinematic UI.
+   ============================================================ */
+.stage-backdrop{z-index:3!important}
+.stage-atmosphere{z-index:2!important}
+.stage-foreground{z-index:5!important}
+.stage-objects{z-index:10!important}
+#stageActors{z-index:10!important}
+#stageProps{z-index:11!important}
+.scene-focus{z-index:13!important}
+.consequence-flash{z-index:17!important}
+
+.stage-objects .actor,
+.stage-objects .prop-object:not(.is-taken){
+  opacity:1!important;
+  visibility:visible!important;
+}
+
+.topbar{
+  position:relative;
+  z-index:120!important;
+}
+.scene-toolbar{
+  position:relative;
+  z-index:110!important;
+}
+.icon-btn,
+.scene-chip,
+.btn{
+  pointer-events:auto!important;
+}
+
+/* Character fallback colors keep actors visible even if an SVG fails to load. */
+.toon-spongebob{background-color:#ffe45c!important}
+.toon-patrick{background-color:#fb8da0!important}
+.toon-squidward{background-color:#78d5c8!important}
+.toon-mrkrabs{background-color:#ef4444!important}
+.toon-plankton{background-color:#83cc39!important}
+
+/* Ensure actor labels remain readable above scenery. */
+.actor-name{
+  position:relative;
+  z-index:2;
+}
