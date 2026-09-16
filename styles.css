@@ -2719,3 +2719,104 @@ button{
 .scene-house .stage-backdrop>:not(.scene-title){
   display:none!important;
 }
+
+
+/* Transparency-safe visual fallback
+   AI Studio exported several supposed-transparent PNGs with the checkerboard baked into
+   the pixels. Keep the new opaque scene backgrounds, but temporarily use transparency-safe
+   SVG/CSS assets for sprites, props and FX until the PNG cutouts are corrected. */
+.toon-spongebob{background-image:url("assets/characters/spongebob.svg")!important}
+.toon-patrick{background-image:url("assets/characters/patrick.svg")!important}
+.toon-squidward{background-image:url("assets/characters/squidward.svg")!important}
+.toon-mrkrabs{background-image:url("assets/characters/mr-krabs.svg")!important}
+.toon-plankton{background-image:url("assets/characters/plankton.svg")!important}
+
+.actor.variant-alert .toon-spongebob{background-image:url("assets/characters/spongebob.svg")!important}
+.actor.variant-excited .toon-patrick{background-image:url("assets/characters/patrick.svg")!important}
+.actor.variant-reacting .toon-squidward{background-image:url("assets/characters/squidward.svg")!important}
+.actor.variant-money-focus .toon-mrkrabs{background-image:url("assets/characters/mr-krabs.svg")!important}
+.actor.variant-carry-formula .toon-plankton{background-image:url("assets/characters/plankton.svg")!important}
+
+/* Disable generated overlays whose checkerboard was baked into the PNG. */
+.stage-atmosphere{
+  background:none!important;
+  opacity:1!important;
+}
+.stage-atmosphere .light-ray,
+.stage-atmosphere .ambient-bubble{
+  display:block!important;
+}
+.scene-krusty .stage-foreground,
+.scene-chum .stage-foreground,
+.scene-fields .stage-foreground,
+.scene-house .stage-foreground,
+.scene-street .stage-foreground{
+  background:none!important;
+}
+.stage-foreground>*{display:block!important}
+
+/* Restore clean CSS grounding/focus/consequence effects. */
+.actor:before{
+  width:62px!important;
+  height:13px!important;
+  bottom:13px!important;
+  background:radial-gradient(ellipse,rgba(4,28,48,.3),transparent 68%)!important;
+  opacity:1!important;
+  transform:translateX(-50%)!important;
+}
+.actor[data-key="plankton"]:before{width:42px!important;height:10px!important}
+.actor.is-payoff-escape:before{
+  width:62px!important;
+  height:13px!important;
+  left:50%!important;
+  bottom:13px!important;
+  background:radial-gradient(ellipse,rgba(4,28,48,.3),transparent 68%)!important;
+  opacity:1!important;
+  transform:translateX(-50%)!important;
+}
+.prop-object.is-active-target:before{
+  background:radial-gradient(circle,rgba(255,239,113,.62),rgba(255,239,113,0) 68%)!important;
+}
+.consequence-flash{
+  background:radial-gradient(circle,rgba(255,235,92,.82),rgba(255,161,66,.34) 34%,transparent 70%)!important;
+}
+
+/* Use the existing live emoji/text props until true-alpha prop PNGs are available. */
+.prop-object[data-key="formula"]>span,
+.prop-object[data-key="money"]>span,
+.prop-object[data-key="clarinet"]>span,
+.prop-object[data-key="conch"]>span{
+  width:auto!important;
+  height:auto!important;
+  font-size:34px!important;
+  background-image:none!important;
+  filter:none!important;
+}
+.object-card[data-add-prop="formula"] .prop-icon,
+.object-card[data-add-prop="money"] .prop-icon,
+.object-card[data-add-prop="clarinet"] .prop-icon,
+.object-card[data-add-prop="conch"] .prop-icon{
+  width:auto!important;
+  height:auto!important;
+  font-size:34px!important;
+  background-image:none!important;
+}
+.actor-carry[data-prop="formula"],
+.actor-carry[data-prop="money"],
+.actor-carry[data-prop="clarinet"],
+.actor-carry[data-prop="conch"]{
+  background-image:none!important;
+  font-size:20px!important;
+}
+
+/* UI panels remain clean HTML/CSS rather than using baked-checkerboard panel images. */
+.physics-layer{
+  background:linear-gradient(180deg,rgba(245,253,255,.97),rgba(229,248,255,.96))!important;
+  border:3px solid rgba(22,50,79,.72)!important;
+}
+.result-dock{
+  background:
+    radial-gradient(circle at 0 0,rgba(121,216,247,.15),transparent 30%),
+    linear-gradient(180deg,#fffdf2,#fff7d8)!important;
+  border:3px solid rgba(22,50,79,.72)!important;
+}
