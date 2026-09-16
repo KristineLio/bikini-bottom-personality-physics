@@ -37,12 +37,13 @@ test("visual asset pack files required by the UI exist", async () => {
   await Promise.all(requiredAssets.map(path => access(new URL("../" + path, import.meta.url))));
 });
 
-test("production CSS references PNG character sprites instead of legacy SVG files", async () => {
+test("character art has a transparency-safe fallback while PNG cutouts are retained", async () => {
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
   for (const name of ["spongebob", "patrick", "squidward", "mr-krabs", "plankton"]) {
     assert.match(css, new RegExp("assets/characters/" + name.replace("-", "\\-") + "\\.png"));
-    assert.doesNotMatch(css, new RegExp("assets/characters/" + name.replace("-", "\\-") + "\\.svg"));
+    assert.match(css, new RegExp("assets/characters/" + name.replace("-", "\\-") + "\\.svg"));
   }
+  assert.match(css, /Transparency-safe visual fallback/);
 });
 
 test("Pages workflow copies the complete assets tree", async () => {
