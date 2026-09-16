@@ -32,9 +32,9 @@ jobs:
 
       - name: Build static portfolio artifact
         run: |
-          mkdir -p dist/assets/characters dist/docs
+          mkdir -p dist/assets dist/docs
           cp index.html styles.css app.js engine.js personalities.js world.js scenarios.js ui.js animations.js dist/
-          cp assets/characters/*.svg dist/assets/characters/
+          cp -R assets/. dist/assets/
           cp docs/butterfly-demo.svg docs/butterfly-demo.gif dist/docs/
           test -s dist/index.html
           test -s dist/engine.js
@@ -53,9 +53,9 @@ jobs:
 
       - name: Build static portfolio artifact
         run: |
-          mkdir -p dist/assets/characters dist/docs
+          mkdir -p dist/assets dist/docs
           cp index.html styles.css app.js engine.js personalities.js world.js scenarios.js ui.js animations.js dist/
-          cp assets/characters/*.svg dist/assets/characters/
+          cp -R assets/. dist/assets/
           cp docs/butterfly-demo.svg docs/butterfly-demo.gif dist/docs/
 
       - name: Configure Pages
