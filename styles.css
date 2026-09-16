@@ -2668,3 +2668,54 @@ button{
   pointer-events:auto!important;
   touch-action:manipulation;
 }
+
+
+/* Background rendering hotfix — use the dedicated stage-sky layer for scene art */
+.hero-stage{
+  background-image:url("assets/backgrounds/main/krusty-krab-bg-main.png")!important;
+  background-position:center!important;
+  background-size:cover!important;
+  background-repeat:no-repeat!important;
+}
+
+.stage.scene-krusty,
+.stage.scene-chum,
+.stage.scene-fields,
+.stage.scene-house{
+  background:#0b6f91!important;
+}
+
+.scene-krusty .stage-sky,
+.scene-chum .stage-sky,
+.scene-fields .stage-sky,
+.scene-house .stage-sky{
+  display:block!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:0!important;
+  opacity:1!important;
+  background-position:center!important;
+  background-size:cover!important;
+  background-repeat:no-repeat!important;
+}
+
+.scene-krusty .stage-sky{
+  background-image:url("assets/backgrounds/main/krusty-krab-bg-main.png")!important;
+}
+.scene-chum .stage-sky{
+  background-image:url("assets/backgrounds/optional/chum-bucket-bg-main.png")!important;
+}
+.scene-fields .stage-sky{
+  background-image:url("assets/backgrounds/optional/conch-street-bg-main.png")!important;
+}
+.scene-house .stage-sky{
+  background-image:url("assets/backgrounds/optional/spongebob-house-bg-main.png")!important;
+}
+
+/* Keep the legacy CSS scenery hidden whenever generated scene art is active. */
+.scene-krusty .stage-backdrop>:not(.scene-title),
+.scene-chum .stage-backdrop>:not(.scene-title),
+.scene-fields .stage-backdrop>:not(.scene-title),
+.scene-house .stage-backdrop>:not(.scene-title){
+  display:none!important;
+}
