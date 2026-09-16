@@ -2386,3 +2386,258 @@ h1 span{color:var(--yellow)}
   position:relative;
   z-index:2;
 }
+
+
+/* V2.5 — AI Studio visual asset pack integration */
+:root{
+  --asset-krusty:url("assets/backgrounds/main/krusty-krab-bg-main.png");
+  --asset-chum:url("assets/backgrounds/optional/chum-bucket-bg-main.png");
+  --asset-fields:url("assets/backgrounds/optional/conch-street-bg-main.png"); /* current generated Jellyfish Fields art */
+  --asset-house:url("assets/backgrounds/optional/spongebob-house-bg-main.png");
+}
+
+/* Home preview follows the same production art direction as the simulator. */
+.hero-stage{
+  background:var(--asset-krusty) center/cover no-repeat!important;
+}
+.hero-stage:after{display:none!important}
+
+/* Production character sprites */
+.toon-spongebob,
+.toon-patrick,
+.toon-squidward,
+.toon-mrkrabs,
+.toon-plankton{
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  clip-path:none!important;
+  background-color:transparent!important;
+  background-position:center bottom!important;
+  background-repeat:no-repeat!important;
+  background-size:contain!important;
+}
+.toon-spongebob{background-image:url("assets/characters/spongebob.png")!important}
+.toon-patrick{background-image:url("assets/characters/patrick.png")!important}
+.toon-squidward{background-image:url("assets/characters/squidward.png")!important}
+.toon-mrkrabs{background-image:url("assets/characters/mr-krabs.png")!important}
+.toon-plankton{background-image:url("assets/characters/plankton.png")!important}
+
+.toon-spongebob:before,.toon-spongebob:after,.toon-spongebob>span,
+.toon-patrick:before,.toon-patrick:after,.toon-patrick>span,
+.toon-squidward:before,.toon-squidward:after,.toon-squidward>span,
+.toon-mrkrabs:before,.toon-mrkrabs:after,.toon-mrkrabs>span,
+.toon-plankton:before,.toon-plankton:after,.toon-plankton>span{
+  display:none!important;
+}
+
+.hero-character .toon{width:84px!important;height:126px!important}
+.hero-plankton .toon{width:58px!important;height:110px!important}
+.trait-card .mini-toon{width:58px!important;height:78px!important}
+.object-card .toon{width:62px!important;height:82px!important}
+
+.actor{width:126px!important;min-height:158px!important}
+.actor .toon{
+  width:112px!important;
+  height:154px!important;
+  background-size:contain!important;
+  transform:scaleX(var(--face)) scale(var(--character-scale))!important;
+  transform-origin:50% 94%!important;
+}
+.actor[data-key="spongebob"]{--character-scale:.93}
+.actor[data-key="patrick"]{--character-scale:.92}
+.actor[data-key="squidward"]{--character-scale:.98}
+.actor[data-key="mrkrabs"]{--character-scale:.95}
+.actor[data-key="plankton"]{--character-scale:.67}
+.actor[data-key="plankton"] .toon{width:82px!important;height:142px!important}
+
+/* Contextual reaction art follows semantic engine events; it never changes a decision. */
+.actor.variant-alert .toon-spongebob{background-image:url("assets/characters/spongebob-alert.png")!important}
+.actor.variant-excited .toon-patrick{background-image:url("assets/characters/patrick-excited.png")!important}
+.actor.variant-reacting .toon-squidward{background-image:url("assets/characters/squidward-reacting.png")!important}
+.actor.variant-money-focus .toon-mrkrabs{background-image:url("assets/characters/mr-krabs-money-focus.png")!important}
+.actor.variant-carry-formula .toon-plankton{background-image:url("assets/characters/plankton-carry-formula.png")!important}
+
+/* AI-generated scene art replaces legacy CSS scenery where a valid scene asset exists. */
+.stage.scene-krusty{background:var(--asset-krusty) center/cover no-repeat!important}
+.stage.scene-chum{background:var(--asset-chum) center/cover no-repeat!important}
+.stage.scene-fields{background:var(--asset-fields) center/cover no-repeat!important}
+.stage.scene-house{background:var(--asset-house) center/cover no-repeat!important}
+
+.scene-krusty:before,.scene-chum:before,.scene-fields:before,.scene-house:before{display:none!important}
+.scene-krusty .stage-sky,.scene-chum .stage-sky,.scene-fields .stage-sky,.scene-house .stage-sky{background:none!important}
+.scene-krusty .stage-backdrop>:not(.scene-title),
+.scene-chum .stage-backdrop>:not(.scene-title),
+.scene-fields .stage-backdrop>:not(.scene-title),
+.scene-house .stage-backdrop>:not(.scene-title){display:none!important}
+
+.stage-atmosphere{
+  background:
+    url("assets/backgrounds/overlays/bubble-overlay-soft.png") center/cover no-repeat,
+    url("assets/backgrounds/overlays/underwater-light-rays-overlay.png") center/cover no-repeat!important;
+  opacity:.66;
+}
+.stage-atmosphere .light-ray,.stage-atmosphere .ambient-bubble{display:none!important}
+
+.stage-foreground>*{display:none!important}
+.scene-krusty .stage-foreground{
+  background:
+    url("assets/backgrounds/overlays/krusty-krab-fg-overlay.png") center/cover no-repeat,
+    url("assets/backgrounds/overlays/stage-floor-shadow-overlay.png") center/cover no-repeat!important;
+}
+.scene-chum .stage-foreground,.scene-fields .stage-foreground,.scene-house .stage-foreground,.scene-street .stage-foreground{
+  background:none!important;
+}
+
+/* Generated character shadow replaces the generic ellipse. */
+.actor:before{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:11px;
+  width:82px;
+  height:34px;
+  transform:translateX(-50%);
+  background:url("assets/fx/soft-character-shadow.png") center/contain no-repeat;
+  opacity:.58;
+  z-index:-1;
+  pointer-events:none;
+}
+.actor[data-key="plankton"]:before{width:52px;height:25px}
+
+/* Real prop art. Unsupported props keep their legacy emoji card. */
+.prop-object[data-key="formula"],
+.prop-object[data-key="money"],
+.prop-object[data-key="clarinet"],
+.prop-object[data-key="conch"]{
+  min-width:82px!important;
+  min-height:82px!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.prop-object[data-key="formula"]>span,
+.prop-object[data-key="money"]>span,
+.prop-object[data-key="clarinet"]>span,
+.prop-object[data-key="conch"]>span{
+  display:block;
+  width:84px;
+  height:84px;
+  font-size:0;
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:contain;
+  filter:drop-shadow(0 8px 7px rgba(4,28,48,.20));
+}
+.prop-object[data-key="formula"]>span{background-image:url("assets/props/formula.png")}
+.prop-object[data-key="money"]>span{background-image:url("assets/props/money.png")}
+.prop-object[data-key="clarinet"]>span{background-image:url("assets/props/clarinet.png");width:92px;height:92px}
+.prop-object[data-key="conch"]>span{background-image:url("assets/props/magic-conch.png")}
+
+.prop-object[data-key="formula"].is-active-target>span{
+  filter:drop-shadow(0 0 10px rgba(255,231,86,.95)) drop-shadow(0 8px 7px rgba(4,28,48,.24));
+}
+
+/* Home hero prop art */
+.formula-prop,.money-prop{
+  border:0!important;
+  background-color:transparent!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  background-size:contain!important;
+  box-shadow:none!important;
+  font-size:0!important;
+}
+.formula-prop{background-image:url("assets/props/formula.png")!important}
+.money-prop{background-image:url("assets/props/money.png")!important}
+.hero-prop small{font-size:9px!important}
+
+/* Director-mode prop cards */
+.object-card[data-add-prop="formula"] .prop-icon,
+.object-card[data-add-prop="money"] .prop-icon,
+.object-card[data-add-prop="clarinet"] .prop-icon,
+.object-card[data-add-prop="conch"] .prop-icon{
+  width:56px;
+  height:56px;
+  font-size:0!important;
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:contain;
+}
+.object-card[data-add-prop="formula"] .prop-icon{background-image:url("assets/props/formula.png")}
+.object-card[data-add-prop="money"] .prop-icon{background-image:url("assets/props/money.png")}
+.object-card[data-add-prop="clarinet"] .prop-icon{background-image:url("assets/props/clarinet.png")}
+.object-card[data-add-prop="conch"] .prop-icon{background-image:url("assets/props/magic-conch.png")}
+
+/* Carried props use the same real art. */
+.actor-carry[data-prop="formula"],
+.actor-carry[data-prop="money"],
+.actor-carry[data-prop="clarinet"],
+.actor-carry[data-prop="conch"]{
+  font-size:0!important;
+  border-radius:0!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  background-size:contain!important;
+}
+.actor-carry[data-prop="formula"]{background-image:url("assets/props/formula.png")!important}
+.actor-carry[data-prop="money"]{background-image:url("assets/props/money.png")!important}
+.actor-carry[data-prop="clarinet"]{background-image:url("assets/props/clarinet.png")!important}
+.actor-carry[data-prop="conch"]{background-image:url("assets/props/magic-conch.png")!important}
+.actor.variant-carry-formula .actor-carry{opacity:0!important}
+
+/* FX strengthen the existing semantic focus/consequence language. */
+.consequence-flash{
+  background:url("assets/fx/action-burst.png") center/250px 250px no-repeat!important;
+}
+.actor.is-payoff-escape:before{
+  width:220px!important;
+  height:118px!important;
+  left:50%!important;
+  bottom:34px!important;
+  opacity:.72!important;
+  background:url("assets/fx/motion-streak-plankton.png") center/contain no-repeat!important;
+  transform:translateX(-68%) scaleX(var(--face))!important;
+}
+.prop-object.is-active-target:before{
+  content:"";
+  position:absolute;
+  inset:-25px;
+  z-index:-1;
+  background:url("assets/fx/focus-glow-ring.png") center/contain no-repeat;
+  opacity:.62;
+  pointer-events:none;
+}
+
+/* Decorative UI skin; HTML remains live, selectable and accessible above it. */
+.physics-layer{
+  width:min(500px,62%)!important;
+  min-height:230px;
+  padding:31px 42px 34px!important;
+  border:0!important;
+  border-radius:30px!important;
+  background:
+    rgba(242,253,255,.90)
+    url("assets/ui/xray-panel-bg.png") center/100% 100% no-repeat!important;
+}
+.result-dock{
+  border:0!important;
+  border-radius:30px!important;
+  padding:38px 52px 42px!important;
+  background:
+    rgba(246,253,255,.94)
+    url("assets/ui/result-panel-bg.png") center/100% 100% no-repeat!important;
+}
+
+@media(max-width:720px){
+  .actor{width:104px!important;min-height:128px!important}
+  .actor .toon{width:92px!important;height:128px!important}
+  .actor[data-key="plankton"] .toon{width:66px!important;height:116px!important}
+  .actor:before{width:66px;height:28px}
+  .physics-layer{
+    width:96%!important;
+    min-height:0!important;
+    padding:24px 28px!important;
+  }
+  .result-dock{padding:30px 24px 34px!important}
+}
