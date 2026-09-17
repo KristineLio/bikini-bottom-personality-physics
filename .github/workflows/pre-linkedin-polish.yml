@@ -1,0 +1,82 @@
+name: Pre-LinkedIn polish
+
+on:
+  push:
+    branches:
+      - polish/pre-linkedin-final-pass
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: polish/pre-linkedin-final-pass
+
+      - name: Apply final browser and scene polish
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          app = Path('app.js')
+          source = app.read_text()
+          old = '$(".actor", els.stage).forEach(el => el.classList.remove('
+          new = '$$(".actor", els.stage).forEach(el => el.classList.remove('
+          if old not in source:
+              raise SystemExit('Expected clearVisualFocus selector bug not found')
+          source = source.replace(old, new, 1)
+
+          old_escape = 'const escapeX = actor.x > 50 ? 91 : 9;\n    const escapeY = clamp(actor.y - 8, 28, 78);'
+          new_escape = 'const edgeInset = els.stage?.clientWidth < 520 ? 17 : 9;\n    const escapeX = actor.x > 50 ? 100 - edgeInset : edgeInset;\n    const escapeY = clamp(actor.y - 8, 28, 78);'
+          if old_escape not in source:
+              raise SystemExit('Expected escape positioning block not found')
+          app.write_text(source.replace(old_escape, new_escape, 1))
+
+          styles = Path('styles.css')
+          css = styles.read_text()
+          css = css.replace(
+              '--asset-fields:url("assets/backgrounds/optional/conch-street-bg-main.png"); /* current generated Jellyfish Fields art */',
+              '--asset-fields:url("assets/backgrounds/optional/jellyfish-fields-bg-main.png");'
+          )
+          css = css.replace(
+              'background-image:url("assets/backgrounds/optional/conch-street-bg-main.png")!important;',
+              'background-image:url("assets/backgrounds/optional/jellyfish-fields-bg-main.png")!important;'
+          )
+          styles.write_text(css)
+
+          fields = Path('assets/backgrounds/optional/conch-street-bg-main.png')
+          correct = Path('assets/backgrounds/optional/jellyfish-fields-bg-main.png')
+          if not fields.exists():
+              raise SystemExit('Expected mislabeled Jellyfish Fields source image not found')
+          correct.write_bytes(fields.read_bytes())
+          fields.unlink()
+
+          Path('tests/browser-wiring.test.mjs').write_text('''import test from "node:test";\nimport assert from "node:assert/strict";\nimport { readFile } from "node:fs/promises";\n\nconst source = await readFile(new URL("../app.js", import.meta.url), "utf8");\n\ntest("collection operations never call forEach on the single-element $ helper", () => {\n  const misuses = [...source.matchAll(/(^|[^$])\\$\\([^\\n;]*?\\)\\.forEach\\s*\\(/gm)];\n  assert.equal(\n    misuses.length,\n    0,\n    "Use $$() for collections. Found single-element $().forEach usage: " +\n      misuses.map(match => match[0].trim()).join(" | ")\n  );\n});\n\ntest("Judge Demo collection resets use the multi-element selector helper", () => {\n  assert.match(source, /\\$\\$\\("\\.actor", els\\.stage\\)\\.forEach/);\n  assert.match(source, /\\$\\$\\("\\[data-film-step\\]", els\\.judgeFilmStepper\\)\\.forEach/);\n  assert.match(source, /\\$\\$\\("\\.prop-object\\.is-new-variable", els\\.stage\\)\\.forEach/);\n});\n''')
+
+          visual = Path('tests/visual-assets.test.mjs')
+          test_source = visual.read_text()
+          test_source = test_source.replace(
+              '  "assets/backgrounds/optional/conch-street-bg-main.png",',
+              '  "assets/backgrounds/optional/jellyfish-fields-bg-main.png",'
+          )
+          visual.write_text(test_source)
+          PY
+
+          node --check app.js
+          npm test
+
+      - name: Commit polish changes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/pre-linkedin-polish.yml
+          git add app.js styles.css tests/browser-wiring.test.mjs tests/visual-assets.test.mjs assets/backgrounds/optional
+          git commit -m "Fix Judge Demo runtime reset and final scene polish"
+          git push origin HEAD:polish/pre-linkedin-final-pass
