@@ -227,7 +227,7 @@ import { sleep, transitionPosition } from "./animations.js";
     if (!els.stage) return;
     els.stage.classList.remove("has-active-character", "is-payoff");
     els.stage.removeAttribute("data-visual-phase");
-    $(".actor", els.stage).forEach(el => el.classList.remove("is-active-character", "focus", "is-payoff-escape", "variant-alert", "variant-excited", "variant-reacting", "variant-money-focus", "variant-carry-formula"));
+    $$(".actor", els.stage).forEach(el => el.classList.remove("is-active-character", "focus", "is-payoff-escape", "variant-alert", "variant-excited", "variant-reacting", "variant-money-focus", "variant-carry-formula"));
     $$(".prop-object", els.stage).forEach(el => el.classList.remove("is-active-target"));
     if (els.sceneFocus) {
       els.sceneFocus.style.removeProperty("--focus-x");
@@ -333,7 +333,8 @@ import { sleep, transitionPosition } from "./animations.js";
     flashConsequence("payoff");
     await sleep(options.escapeAnticipation ?? 120);
 
-    const escapeX = actor.x > 50 ? 91 : 9;
+    const edgeInset = els.stage?.clientWidth < 520 ? 17 : 9;
+    const escapeX = actor.x > 50 ? 100 - edgeInset : edgeInset;
     const escapeY = clamp(actor.y - 8, 28, 78);
     await walkActorTo(actorKey, escapeX, escapeY, options.escapeDuration ?? 760);
 

@@ -2392,7 +2392,7 @@ h1 span{color:var(--yellow)}
 :root{
   --asset-krusty:url("assets/backgrounds/main/krusty-krab-bg-main.png");
   --asset-chum:url("assets/backgrounds/optional/chum-bucket-bg-main.png");
-  --asset-fields:url("assets/backgrounds/optional/conch-street-bg-main.png"); /* current generated Jellyfish Fields art */
+  --asset-fields:url("assets/backgrounds/optional/jellyfish-fields-bg-main.png");
   --asset-house:url("assets/backgrounds/optional/spongebob-house-bg-main.png");
 }
 
@@ -2706,7 +2706,7 @@ button{
   background-image:url("assets/backgrounds/optional/chum-bucket-bg-main.png")!important;
 }
 .scene-fields .stage-sky{
-  background-image:url("assets/backgrounds/optional/conch-street-bg-main.png")!important;
+  background-image:url("assets/backgrounds/optional/jellyfish-fields-bg-main.png")!important;
 }
 .scene-house .stage-sky{
   background-image:url("assets/backgrounds/optional/spongebob-house-bg-main.png")!important;

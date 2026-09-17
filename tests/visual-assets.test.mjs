@@ -5,7 +5,7 @@ import { access, readFile } from "node:fs/promises";
 const requiredAssets = [
   "assets/backgrounds/main/krusty-krab-bg-main.png",
   "assets/backgrounds/optional/chum-bucket-bg-main.png",
-  "assets/backgrounds/optional/conch-street-bg-main.png",
+  "assets/backgrounds/optional/jellyfish-fields-bg-main.png",
   "assets/backgrounds/optional/spongebob-house-bg-main.png",
   "assets/backgrounds/overlays/bubble-overlay-soft.png",
   "assets/backgrounds/overlays/krusty-krab-fg-overlay.png",
